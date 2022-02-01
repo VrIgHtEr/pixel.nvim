@@ -48,7 +48,7 @@ return function()
     end
     for r = 1, rows do
         for c, v in ipairs(grid[r]) do
-            pixel.set(r, c, palette[v])
+            pixel.set(r, c, palette[v + 1])
         end
     end
 end
