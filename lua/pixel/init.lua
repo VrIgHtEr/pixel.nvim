@@ -24,15 +24,13 @@ local lines
 
 local redraw
 redraw = function()
-    vim.schedule(function()
-        if win then
-            local success = not options.animation_func or pcall(options.animation_func)
-            if success then
-                M.show()
-            end
-            vim.defer_fn(redraw, util.round(1000 / options.framerate))
+    if win then
+        local success = not options.animation_func or pcall(options.animation_func)
+        if success then
+            M.show()
         end
-    end)
+        vim.defer_fn(redraw, util.round(1000 / options.framerate))
+    end
 end
 
 function M.setup(opts)
@@ -105,14 +103,14 @@ function M.setup(opts)
 end
 
 function M.get(r, c)
-    if type(r) ~= 'number' or r < 1 or type(c) ~= 'number' or c < 1 or r > options.rows or c > options.cols then
+    if r < 1 or c < 1 or r > options.rows or c > options.cols then
         return
     end
     return grid[r][c]
 end
 
 function M.set(r, c, color)
-    if type(r) ~= 'number' or r < 1 or type(c) ~= 'number' or c < 1 or r > options.rows or c > options.cols then
+    if r < 1 or c < 1 or r > options.rows or c > options.cols then
         return false
     end
     local col = colors.canonical(color)
@@ -141,8 +139,7 @@ function M.toggle()
         M.hide()
     else
         cache.refresh_highlights()
-        M.show()
-        vim.schedule(redraw)
+        redraw()
     end
 end
 
