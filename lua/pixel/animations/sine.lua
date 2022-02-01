@@ -1,6 +1,6 @@
 local pixel = require 'pixel'
 local color = require 'pixel.color'
-local divisor = 100
+local divisor = 50
 local offset = 0
 local increment = 0.01
 
