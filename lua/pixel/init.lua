@@ -67,7 +67,7 @@ function M.setup(opts)
         return nil, 'framerate < 0'
     end
     options.rows, options.cols, options.framerate = opts.rows, opts.cols, opts.framerate
-    options.ns = vim.api.nvim_create_namespace 'vrighter_hue_map'
+    options.ns = vim.api.nvim_create_namespace 'vrighter_pixel_nvim'
     for i = 1, options.rows do
         local row = {}
         grid[i] = row
@@ -186,13 +186,16 @@ function M.show()
     end
 
     if not win then
+        local width, height = vim.api.nvim_win_get_width(0), vim.api.nvim_win_get_height(0)
+        local row, col = util.round(height / 2 - ((options.rows + 1) / 2) / 2), util.round(width / 2 - options.cols / 2)
+
         win = vim.api.nvim_open_win(buf, false, {
             width = options.cols,
             height = math.floor((options.rows + 1) / 2),
             relative = 'editor',
-            col = 1073741824,
-            row = 0,
-            anchor = 'NE',
+            col = col,
+            row = row,
+            anchor = 'NW',
             style = 'minimal',
             focusable = false,
             border = 'rounded',
