@@ -138,6 +138,7 @@ function M.toggle()
     if win then
         M.hide()
     else
+        M.show()
         cache.refresh_highlights()
         redraw()
     end
