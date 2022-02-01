@@ -1,7 +1,7 @@
 local animations = {
     require 'pixel.animations.lines',
-    require 'pixel.animations.sine',
     require 'pixel.animations.fire',
+    require 'pixel.animations.sine',
 }
 
 local frames_per_cycle = 150
