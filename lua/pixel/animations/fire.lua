@@ -6,7 +6,7 @@ local grid = nil
 
 local palette = {}
 local palette_size = 256
-local r_divisor = 1 / 4.25
+local r_divisor = 1 / 4.0625
 
 for i = 1, palette_size do
     local v = (i - 1) / (palette_size - 1)
