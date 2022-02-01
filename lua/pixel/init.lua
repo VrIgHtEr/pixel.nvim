@@ -94,14 +94,14 @@ function M.setup(opts)
     options.setup_pending = false
 end
 
-function M.getpixel(r, c)
+function M.get(r, c)
     if type(r) ~= 'number' or r < 1 or type(c) ~= 'number' or c < 1 or r > options.rows or c > options.cols then
         return
     end
     return grid[r][c]
 end
 
-function M.setpixel(r, c, color)
+function M.set(r, c, color)
     if type(r) ~= 'number' or r < 1 or type(c) ~= 'number' or c < 1 or r > options.rows or c > options.cols then
         return false
     end

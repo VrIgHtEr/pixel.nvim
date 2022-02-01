@@ -9,7 +9,7 @@ function M.clear(col)
     end
     for r = 1, pixel.rows() do
         for c = 1, pixel.cols() do
-            pixel.setpixel(r, c, col)
+            pixel.set(r, c, col)
         end
     end
 end
@@ -36,7 +36,7 @@ function M.line(x0, y0, x1, y1, col)
     end
     local err = dx + dy
     while true do
-        pixel.setpixel(y0, x0, col)
+        pixel.set(y0, x0, col)
         if x0 == x1 and y0 == y1 then
             break
         end
