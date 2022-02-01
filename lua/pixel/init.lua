@@ -2,12 +2,14 @@ local M = {}
 
 local cache = require 'pixel.cache'
 local colors = require 'pixel.color'
+local util = require 'pixel.util'
 
 local options = {
     setup_pending = true,
     rows = 20,
     cols = 20,
     animation_func = nil,
+    framerate = 10,
     ns = nil,
 }
 
@@ -28,7 +30,7 @@ redraw = function()
             if success then
                 M.show()
             end
-            vim.defer_fn(redraw, 40)
+            vim.defer_fn(redraw, util.round(1000 / options.framerate))
         end
     end)
 end
@@ -56,7 +58,15 @@ function M.setup(opts)
     if opts.cols < 1 then
         return nil, 'cols < 1'
     end
-    options.rows, options.cols = opts.rows, opts.cols
+    if not opts.framerate then
+        opts.framerate = options.framerate
+    end
+    if type(opts.framerate) ~= 'number' then
+        return nil, 'framerate is not a number'
+    elseif opts.framerate <= 0 then
+        return nil, 'framerate < 0'
+    end
+    options.rows, options.cols, options.framerate = opts.rows, opts.cols, opts.framerate
     options.ns = vim.api.nvim_create_namespace 'vrighter_hue_map'
     for i = 1, options.rows do
         local row = {}

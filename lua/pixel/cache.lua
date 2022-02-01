@@ -45,8 +45,6 @@ function M.unuse_highlight(hl)
         cached.refcount = cached.refcount - 1
         if cached.refcount == 0 then
             hlgroups[cached.group] = nil
-            --local cmd = 'highlight clear ' .. cached.group
-            --vim.api.nvim_exec(cmd, true)
             table.insert(freelist, cached.id)
             hlcache[key.a][key.b] = nil
             hlcache[key.a].count = hlcache[key.a].count - 1
