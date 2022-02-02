@@ -1,62 +1,78 @@
-local M = {}
+local complex = {}
 
 local MT = {
     __tostring = function(tbl)
         local ret = tostring(tbl[1])
         if tbl[2] ~= 0 then
-            ret = ret .. ' + ' .. tostring(tbl[2]) .. 'i'
+            if tbl[2] < 0 then
+                ret = ret .. ' - '
+                if tbl[2] ~= -1 then
+                    ret = ret .. -tbl[2]
+                end
+            else
+                ret = ret .. ' + '
+                if tbl[2] ~= 1 then
+                    ret = ret .. tbl[2]
+                end
+            end
+            ret = ret .. 'i'
         end
         return ret
     end,
     __index = function(tbl, key)
-        if key == 'real' then
+        if key == 'real' or key == 'x' then
             return tbl[1]
-        elseif key == 'imag' then
+        elseif key == 'imag' or key == 'y' then
             return tbl[2]
-        else
-            return M[key]
         end
+        return complex[key]
     end,
     __newindex = function(tbl, key, value)
-        if key == 'real' then
-            tbl[1] = type(value) == 'number' and value or 0
-        elseif key == 'imag' then
-            tbl[2] = type(value) == 'number' and value or 0
+        if key == 'real' or key == 'x' then
+            rawset(tbl, 1, type(value) == 'number' and value or 0)
+        elseif key == 'imag' or key == 'y' then
+            rawset(tbl, 2, type(value) == 'number' and value or 0)
+        elseif key ~= '__type' then
+            rawset(tbl, key, value)
         end
     end,
     __add = function(a, b)
-        return M.add(a, b)
+        return complex.add(a, b)
     end,
     __sub = function(a, b)
-        return M.sub(a, b)
+        return complex.sub(a, b)
     end,
     __mul = function(a, b)
-        return M.mul(a, b)
+        return complex.mul(a, b)
     end,
     __div = function(a, b)
-        return M.div(a, b)
+        return complex.div(a, b)
     end,
     __unm = function(a)
-        return M.unm(a)
+        return complex.unm(a)
     end,
     __eq = function(a, b)
-        return M.eq(a, b)
+        return complex.eq(a, b)
     end,
 }
 
-function M.mag(x)
+function complex.mag(x)
     return math.sqrt(x[1] * x[1] + x[2] * x[2])
 end
 
-function M.eq(a, b)
+function complex.eq(a, b)
     return a[1] == b[1] and a[2] == b[2]
 end
 
-function M.unm(a)
+function complex.unm(a)
+    return setmetatable({ -a[1], -a[2] }, MT)
+end
+
+function complex.conj(a)
     return setmetatable({ a[1], -a[2] }, MT)
 end
 
-function M.mul(a, b)
+function complex.mul(a, b)
     if type(a) == 'number' then
         return setmetatable({ b[1] * a, b[2] * a }, MT)
     elseif type(b) == 'number' then
@@ -65,28 +81,38 @@ function M.mul(a, b)
     return setmetatable({ a[1] * b[1] - a[2] * b[2], a[1] * b[2] + a[2] * b[1] }, MT)
 end
 
-function M.div(a, b)
+function complex.div(a, b)
     if type(a) == 'number' then
         return setmetatable({ b[1] / a, b[2] / a }, MT)
     elseif type(b) == 'number' then
         return setmetatable({ a[1] / b, a[2] / b }, MT)
     end
-    return M.mul(a, M.unm(b))
+    return complex.mul(a, complex.conj(b))
 end
 
-function M.add(a, b)
+function complex.add(a, b)
     return setmetatable({ a[1] + b[1], a[2] + b[2] }, MT)
 end
 
-function M.sub(a, b)
+function complex.sub(a, b)
     return setmetatable({ a[1] - b[1], a[2] - b[2] }, MT)
 end
 
-function M.normalize(a)
+function complex.normalize(a)
     return a / a:mag()
 end
 
-setmetatable(M, {
+setmetatable(complex, {
+    __index = function(_, key)
+        if key == '__type' then
+            return 'complex'
+        end
+    end,
+    __newindex = function(tbl, key, value)
+        if key ~= '__type' then
+            rawset(tbl, key, value)
+        end
+    end,
     __call = function(_, a, b)
         if a == nil then
             if b == nil then
@@ -98,8 +124,10 @@ setmetatable(M, {
             elseif type(b) == 'number' then
                 return setmetatable({ a, b }, MT)
             end
+        elseif b == nil and type(a) == 'table' and a.__type == complex.__type then
+            return a
         end
     end,
 })
 
-return M
+return complex
