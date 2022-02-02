@@ -6,4 +6,11 @@ function M.round(x)
         return -math.floor(-x + 0.5)
     end
 end
+
+setmetatable(M, {
+    __index = function(_, key)
+        return math[key]
+    end,
+})
+
 return M

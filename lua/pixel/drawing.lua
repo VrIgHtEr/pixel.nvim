@@ -1,5 +1,5 @@
 local pixel = require 'pixel'
-local util = require 'pixel.util'
+local math = require 'pixel.util.math'
 
 local M = {}
 
@@ -18,7 +18,7 @@ function M.line(x0, y0, x1, y1, col)
     if not col then
         col = 16777215
     end
-    x0, y0, x1, y1 = util.round(x0), util.round(y0), util.round(x1), util.round(y1)
+    x0, y0, x1, y1 = math.round(x0), math.round(y0), math.round(x1), math.round(y1)
 
     local dx = math.abs(x1 - x0)
     local sx

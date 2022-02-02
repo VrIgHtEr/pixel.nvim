@@ -4,7 +4,7 @@
 ---@field b number
 --
 local M = {}
-local util = require 'pixel.util'
+local math = require 'pixel.util.math'
 
 ---Splits an integer representation of a color into its r,g and b components
 ---@param i number
@@ -14,10 +14,10 @@ function M.int_to_rgb(i)
 end
 
 function M.rgb_to_int(r, g, b)
-    r, g, b = util.round(r), util.round(g), util.round(b)
-    return bit.lshift(util.round(math.min(255, math.max(0, r))), 16)
-        + bit.lshift(util.round(math.min(255, math.max(0, g))), 8)
-        + util.round(math.min(255, math.max(0, b)))
+    r, g, b = math.round(r), math.round(g), math.round(b)
+    return bit.lshift(math.round(math.min(255, math.max(0, r))), 16)
+        + bit.lshift(math.round(math.min(255, math.max(0, g))), 8)
+        + math.round(math.min(255, math.max(0, b)))
 end
 
 local hexstr = '0123456789abcdef'

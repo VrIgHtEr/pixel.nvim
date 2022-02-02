@@ -1,8 +1,7 @@
 local M = {}
 
 local cache = require 'pixel.cache'
-local colors = require 'pixel.color'
-local util = require 'pixel.util'
+local math = require 'pixel.util.math'
 
 local options = {
     setup_pending = true,
@@ -31,7 +30,7 @@ redraw = function()
         if success then
             M.show()
         end
-        vim.defer_fn(redraw, util.round(1000 / options.framerate))
+        vim.defer_fn(redraw, math.round(1000 / options.framerate))
     end
 end
 
@@ -186,7 +185,7 @@ function M.show()
 
     if not win then
         local width, height = vim.api.nvim_win_get_width(0), vim.api.nvim_win_get_height(0)
-        local row, col = util.round(height / 2 - ((options.rows + 1) / 2) / 2), util.round(width / 2 - options.cols / 2)
+        local row, col = math.round(height / 2 - ((options.rows + 1) / 2) / 2), math.round(width / 2 - options.cols / 2)
 
         win = vim.api.nvim_open_win(buf, false, {
             width = options.cols,

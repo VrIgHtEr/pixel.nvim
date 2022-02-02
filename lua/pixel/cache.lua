@@ -41,14 +41,21 @@ function M.end_transaction()
             purge_highlight(key, cached)
         elseif needs_update then
             cmdindex = cmdindex + 1
-            cmds[cmdindex] = { 'hi ', cached.group, ' guifg=', color.int_to_hex(key.a), ' guibg=', color.int_to_hex(key.b) }
+            cmds[cmdindex] = ' :hi '
+            cmdindex = cmdindex + 1
+            cmds[cmdindex] = cached.group
+            cmdindex = cmdindex + 1
+            cmds[cmdindex] = ' guifg='
+            cmdindex = cmdindex + 1
+            cmds[cmdindex] = color.int_to_hex(key.a)
+            cmdindex = cmdindex + 1
+            cmds[cmdindex] = ' guibg='
+            cmdindex = cmdindex + 1
+            cmds[cmdindex] = color.int_to_hex(key.b)
         end
     end
     dirty = {}
-    for i, cmd in ipairs(cmds) do
-        cmds[i] = table.concat(cmd)
-    end
-    cmds = table.concat(cmds, '\n')
+    cmds = table.concat(cmds)
     vim.api.nvim_exec(cmds, true)
     transaction = false
     return true
