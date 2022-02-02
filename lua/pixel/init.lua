@@ -25,7 +25,9 @@ local lines
 local redraw
 redraw = function()
     if win then
+        cache.begin_transaction()
         local success = not options.animation_func or pcall(options.animation_func)
+        cache.end_transaction()
         if success then
             M.show()
         end
@@ -113,9 +115,8 @@ function M.set(r, c, color)
     if r < 1 or c < 1 or r > options.rows or c > options.cols then
         return false
     end
-    local col = colors.canonical(color)
-    if col then
-        grid[r][c] = col
+    if color then
+        grid[r][c] = color
         return true
     end
     return false
