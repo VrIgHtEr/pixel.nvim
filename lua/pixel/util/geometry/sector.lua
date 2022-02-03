@@ -94,8 +94,6 @@ local x_axis = line(complex(0, 0), complex(1, 0))
 function sector.render(self, halfwidth, halfheight, position, rot, player_height, stack, vertices, sectors, top, bottom, left, right, set_pixel)
     print '-------------------------------------------'
     print 'RENDERING SECTOR'
-    print(position)
-    print(rot)
     local fl, ce = self.floor - player_height, self.ceil - player_height
     for wallid = 1, #self do
         print '---'
