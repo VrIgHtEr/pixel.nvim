@@ -31,13 +31,13 @@ setmetatable(sector, {
                 if type(index) ~= 'number' or index < 0 then
                     return
                 end
-                ret[i] = index
+                ret[i] = index + 1
             end
             for i, portal in ipairs(portals) do
                 if portal ~= 'x' and (type(portal) ~= 'number' or portal < 0) then
                     return
                 end
-                ret.portals[i] = portal
+                ret.portals[i] = portal == 'x' and portal or portal + 1
             end
             return ret
         end
