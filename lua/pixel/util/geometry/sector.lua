@@ -165,14 +165,14 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
         print('PR: ' .. tostring(p_right))
 
         --cull: wall is offscreen, even though it is facing us and not behind us
-        if p_right < left or p_left > right then
+        if p_right <= left or p_left > right then
             print('CULL: right:' .. p_right .. ':' .. left .. '   left:' .. p_left .. ':' .. right)
             goto continue
         end
 
-        local flt, frt = fl / a.y, fl / b.y
+        local flb, frb = fl / a.y, fl / b.y
         local clt, crt = ce / a.y, ce / b.y
-        local flb, frb, clb, crb
+        local flt, frt, clb, crb
 
         local steps = p_right - p_left
 
@@ -182,9 +182,9 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
             table.insert(stack, { sector = portal, left = left, right = right })
             if portal.floor > self.floor then
                 local pfloor = portal.floor - player_height
-                flt, flb, frt, frb = pfloor / a.y, flt, pfloor / b.y, frt
+                flt, frt = pfloor / a.y, pfloor / b.y
             else
-                flb, frb = flt, frt
+                flt, frt = flb, frb
             end
             if portal.ceil < self.ceil then
                 local pceil = portal.ceil - player_height
@@ -193,7 +193,7 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
                 clb, crb = clt, crt
             end
         else
-            flb, frb, clb, crb = flt, frt, clt, crt
+            flt, frt, clb, crb = flb, frb, clt, crt
         end
         ::continue::
     end
