@@ -24,13 +24,17 @@ local lines
 local redraw
 redraw = function()
     if win then
-        cache.begin_transaction()
-        local success = not options.animation_func or pcall(options.animation_func)
-        cache.end_transaction()
-        if success then
-            M.show()
+        if options.animation_func then
+            cache.begin_transaction()
+            local success, err = pcall(options.animation_func)
+            cache.end_transaction()
+            if success then
+                M.show()
+                vim.defer_fn(redraw, math.round(1000 / options.framerate))
+            else
+                print('DRAWING ERROR: ' .. err)
+            end
         end
-        vim.defer_fn(redraw, math.round(1000 / options.framerate))
     end
 end
 

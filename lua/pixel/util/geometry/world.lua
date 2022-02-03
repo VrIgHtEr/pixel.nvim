@@ -81,7 +81,7 @@ function world.load(path)
                             end
                         end
                     end
-                    local sect = sector(verts, portals)
+                    local sect = sector(floor_height, ceiling_height, verts, portals)
                     if sect then
                         table.insert(level.sectors, sect)
                     else
@@ -116,16 +116,35 @@ function world.load(path)
 end
 
 function world.render(level, width, height, set_pixel)
-    local stack = { { sector = level.sectors[level.currentsector], left = 1, right = width } }
+    local sect = level.sectors[level.currentsector]
+    local player_height = sect.floor + 1
+    local stack = { { sector = sect, left = 0, right = width } }
     local top, bottom = {}, {}
     for i = 1, width do
         top[i] = 1
         bottom[i] = height
     end
+    local rot = complex(math.cos(level.angle), -math.sin(level.angle))
+    local halfwidth, halfheight = width / 2, height / 2
     while #stack > 0 do
         local next = table.remove(stack)
-        next.sector:render(stack, level.position, level.angle, level.vertices, level.sectors, top, bottom, next.left, next.right, set_pixel)
+        next.sector:render(
+            halfwidth,
+            halfheight,
+            level.position,
+            rot,
+            player_height,
+            stack,
+            level.vertices,
+            level.sectors,
+            top,
+            bottom,
+            next.left,
+            next.right,
+            set_pixel
+        )
     end
+    error 'FINISHED'
 end
 
 return world

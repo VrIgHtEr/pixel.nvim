@@ -1,4 +1,11 @@
 local sector = {}
+local line = require 'pixel.util.geometry.line'
+local complex = require 'pixel.util.math.complex'
+local math = require 'pixel.util.math'
+local prt = print
+local print = function(...)
+    return prt(...)
+end
 
 local MT = {
     __index = function(_, key)
@@ -22,7 +29,7 @@ setmetatable(sector, {
             rawset(tbl, key, value)
         end
     end,
-    __call = function(_, indices, portals)
+    __call = function(_, floor_height, ceiling_height, indices, portals)
         if #indices >= 3 and #indices == #portals then
             local ret = setmetatable({ portals = {} }, MT)
             for i, index in ipairs(indices) do
@@ -36,6 +43,10 @@ setmetatable(sector, {
                     return
                 end
                 ret.portals[i] = portal == 'x' and portal or portal + 1
+            end
+            ret.floor, ret.ceil = tonumber(floor_height), tonumber(ceiling_height)
+            if not ret.floor or not ret.ceil or ret.ceil <= ret.floor then
+                return
             end
             return ret
         end
@@ -75,6 +86,98 @@ function sector.validate(s, vertices, sectors)
     return true
 end
 
-function sector.render(self, position, angle, stack, vertices, sectors, top, bottom, left, right, set_pixel) end
+local I = complex(0, 1)
+local near = 0.001
+local cnear = complex(0, near)
+local x_axis = line(complex(0, 0), complex(1, 0))
+
+function sector.render(self, halfwidth, halfheight, position, rot, player_height, stack, vertices, sectors, top, bottom, left, right, set_pixel)
+    print 'RENDERING SECTOR'
+    local fl, ce = self.floor - player_height, self.ceil - player_height
+    for wallid = 1, #self do
+        print('rendering wall ' .. wallid)
+        local previd = wallid - 1
+        if previd == 0 then
+            previd = #self
+        end
+        --get transformed wall coordinates
+        local a, b = (vertices[previd] - position) * rot, (vertices[wallid] - position) * rot
+        print(a)
+        print(b)
+
+        --get wall normal
+        local wallvect = b - a
+        print(wallvect)
+        local normal = wallvect * I
+        print(normal)
+
+        --cull: wall is not facing us
+        if normal.y >= 0 then
+            print 'culled: backface'
+            goto continue
+        end
+
+        --cull: wall is completely behind the near plane
+        if a.y < near and b.y < near then
+            print 'culled: behind near plane'
+            goto continue
+        end
+
+        --if wall is not completely in front of the near plane, then we need to clip it to the near plane
+        if not (a.y >= near and b.y >= near) then
+            print 'clipping'
+            local l = line(a - cnear, b - cnear)
+            local intersectionpoint = l:lerp(l:intersect(x_axis)) + cnear
+            if a.y > b.y then
+                b = intersectionpoint
+            else
+                a = intersectionpoint
+            end
+            print(a)
+            print(b)
+        end
+
+        --make sure a and b are the left and right edges of the wall, respectively
+        if a.x > b.x then
+            a, b = b, a
+        end
+
+        local f_left, f_right = a.x / a.y, b.x / b.y
+
+        local p_left, p_right = math.round(f_left * halfwidth) + 1, math.round(f_right * halfwidth) + 1
+
+        --cull: wall is offscreen, even though it is facing us and not behind us
+        if p_right < left or p_left > right then
+            goto continue
+        end
+
+        local flt, frt = fl / a.y, fl / b.y
+        local clt, crt = ce / a.y, ce / b.y
+        local flb, frb, clb, crb
+
+        local steps = p_right - p_left
+
+        local portal = self.portals[wallid] ~= 'x' and sectors[self.portals[wallid]] or nil
+
+        if portal then
+            if portal.floor > self.floor then
+                local pfloor = portal.floor - player_height
+                flt, flb, frt, frb = pfloor / a.y, flt, pfloor / b.y, frt
+            else
+                flb, frb = flt, frt
+            end
+            if portal.ceil < self.ceil then
+                local pceil = portal.ceil - player_height
+                clb, crb = pceil / a.y, pceil / b.y
+            else
+                clb, crb = clt, crt
+            end
+            table.insert(stack, { sector = portal, left = left, right = right })
+        else
+            flb, frb, clb, crb = flt, frt, clt, crt
+        end
+        ::continue::
+    end
+end
 
 return sector
