@@ -1,5 +1,3 @@
-local complex = require 'pixel.util.math.complex'
-
 local sector = {}
 
 local MT = {
@@ -44,9 +42,17 @@ setmetatable(sector, {
     end,
 })
 
-function sector.validate(s, vertices)
+function sector.validate(s, vertices, sectors)
+    --validate that all portals point to valid sectors
+    local amt = #sectors
+    for _, x in ipairs(s.portals) do
+        if x ~= 'x' and x > amt then
+            return false
+        end
+    end
+
     --validate vertex indices are all within range
-    local amt = #vertices
+    amt = #vertices
     for _, x in ipairs(s) do
         if x > amt then
             return false
@@ -68,5 +74,7 @@ function sector.validate(s, vertices)
     --sector is now confirmed to be a simple, convex polygon, with valid vertex data
     return true
 end
+
+function sector.render(self, position, angle, stack, vertices, sectors, top, bottom, left, right, set_pixel) end
 
 return sector

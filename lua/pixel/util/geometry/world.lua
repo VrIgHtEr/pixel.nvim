@@ -3,12 +3,8 @@ local string = require 'pixel.util.string'
 local complex = require 'pixel.util.math.complex'
 local sector = require 'pixel.util.geometry.sector'
 
-local path = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/map.txt'
-
-local level = nil
-
-function world.load()
-    level = { vertices = {}, sectors = {}, position = nil, angle = nil, currentsector = nil }
+function world.load(path)
+    local level = { vertices = {}, sectors = {}, position = nil, angle = nil, currentsector = nil }
     local file = io.open(path, 'r')
     local data = file:read '*a'
     file:close()
@@ -96,15 +92,40 @@ function world.load()
                     if not x or not y or not angle or not sectornum then
                         error('Invalid ' .. vals[1] .. ' line (' .. lineno .. '): ' .. line)
                     end
-                    level.position, level.angle, level.currentsector = complex(x, y), angle, sectornum
+                    level.position, level.angle, level.currentsector = complex(x, y), angle, sectornum + 1
                 elseif vals[1] == 'light' then
                 end
             end
         end
     end
-    print(vim.inspect(level))
+    for i, x in ipairs(level.sectors) do
+        if not x:validate(level.vertices, level.sectors) then
+            error('Invalid sector ' .. i)
+        end
+    end
+    if not level.position or not level.angle or not level.currentsector then
+        error 'player line was not found'
+    end
+    if level.currentsector < 1 or level.currentsector > #level.sectors then
+        error('Invalid player sector number: ' .. level.currentsector)
+    end
+
+    --TODO: validate player inside sector
+
+    return level
 end
 
-world.load()
+function world.render(level, width, height, set_pixel)
+    local stack = { { sector = level.sectors[level.currentsector], left = 1, right = width } }
+    local top, bottom = {}, {}
+    for i = 1, width do
+        top[i] = 1
+        bottom[i] = height
+    end
+    while #stack > 0 do
+        local next = table.remove(stack)
+        next.sector:render(stack, level.position, level.angle, level.vertices, level.sectors, top, bottom, next.left, next.right, set_pixel)
+    end
+end
 
 return world
