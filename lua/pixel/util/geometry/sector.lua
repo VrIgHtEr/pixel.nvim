@@ -24,36 +24,25 @@ setmetatable(sector, {
             rawset(tbl, key, value)
         end
     end,
-    __call = function(_, ...)
-        local indices = { ... }
-        if #indices == 1 and type(indices[1]) == 'table' then
-            indices = indices[1]
-        end
-        if #indices >= 3 then
-            local ret = setmetatable({}, MT)
+    __call = function(_, indices, portals)
+        if #indices >= 3 and #indices == #portals then
+            local ret = setmetatable({ portals = {} }, MT)
             for i, index in ipairs(indices) do
-                if type(index) ~= 'number' or index < 1 then
+                if type(index) ~= 'number' or index < 0 then
                     return
                 end
                 ret[i] = index
+            end
+            for i, portal in ipairs(portals) do
+                if portal ~= 'x' and (type(portal) ~= 'number' or portal < 0) then
+                    return
+                end
+                ret.portals[i] = portal
             end
             return ret
         end
     end,
 })
-
-local function validate_convex(s, vertices)
-    local pb, pd = vertices[s[#s]], vertices[s[#s]] - vertices[s[#s - 1]]
-    for _, x in ipairs(s) do
-        local v = vertices[x]
-        local d = v - pb
-        if (d / pd).y < 0 then
-            return false
-        end
-        pb, pd = v, d
-    end
-    return true
-end
 
 function sector.validate(s, vertices)
     --validate vertex indices are all within range
@@ -79,10 +68,5 @@ function sector.validate(s, vertices)
     --sector is now confirmed to be a simple, convex polygon, with valid vertex data
     return true
 end
-
-local verts = { complex(0, 0), complex(10, 0), complex(5, 5) }
-local sect = sector(1, 2, 3)
-print(vim.inspect(sect))
-print(sect:validate(verts))
 
 return sector
