@@ -142,6 +142,16 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
         --make sure a and b are the left and right edges of the wall, respectively
         if a.x > b.x then
             a, b = b, a
+        elseif a.x == b.x then
+            if a.x < 0 then
+                if a.y > b.y then
+                    a, b = b, a
+                end
+            else
+                if a.y < b.y then
+                    a, b = b, a
+                end
+            end
         end
 
         print('A:' .. tostring(a))
