@@ -111,7 +111,7 @@ function world.load(path)
     end
 
     --TODO: validate player inside sector
-
+    level.angle = level.angle - math.pi / 2
     return level
 end
 
