@@ -98,6 +98,7 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
     print(rot)
     local fl, ce = self.floor - player_height, self.ceil - player_height
     for wallid = 1, #self do
+        print '---'
         print('WALL: ' .. wallid)
         local previd = wallid - 1
         if previd == 0 then
@@ -187,7 +188,6 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
             flb, frb, clb, crb = flt, frt, clt, crt
         end
         ::continue::
-        print '---'
     end
 end
 
