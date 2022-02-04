@@ -8,6 +8,7 @@ local sector = require 'pixel.util.geometry.sector'
 ---@field position complex
 ---@field angle number
 ---@field currentsector number
+---@field playerheight number
 
 local world = {}
 
@@ -122,6 +123,8 @@ function world.load(path)
 
     --TODO: validate player inside sector
 
+    level.playerheight = 1
+
     level.angle = level.angle - math.pi / 2
     return level
 end
@@ -136,7 +139,7 @@ function world.render(level, width, height, set_pixel)
         set_pixel(x, y, col)
     end
     local sect = level.sectors[level.currentsector]
-    local player_height = sect.floor + (sect.ceil - sect.floor) / 2
+    local player_height = sect.floor + level.playerheight
     local stack = { { sector = sect, left = 0, right = width } }
     local top, bottom = {}, {}
     for i = 1, width do

@@ -17,10 +17,6 @@ local color = require 'pixel.color'
 local line = require 'pixel.util.geometry.line'
 local complex = require 'pixel.util.math.complex'
 local math = require 'pixel.util.math'
-local prt = print
-local print = function(...)
-    --    return prt(...)
-end
 
 local colors = {
     ceil = 255 * 65536,
@@ -139,12 +135,8 @@ local x_axis = line(complex(0, 0), complex(1, 0))
 ---@param right number
 ---@param set_pixel function
 function sector_t.render(self, halfwidth, halfheight, position, rot, player_height, stack, vertices, sectors, top, bottom, left, right, set_pixel)
-    print '-------------------------------------------'
-    print('RENDERING SECTOR : LEFT:' .. tostring(left) .. ' RIGHT=' .. tostring(right))
     local fl, ce = self.floor - player_height, self.ceil - player_height
     for wallid = 1, #self do
-        print '---'
-        print('WALL: ' .. wallid)
         local previd = wallid - 1
         if previd == 0 then
             previd = #self
@@ -152,31 +144,25 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
 
         --get transformed wall coordinates
         local a, b = (vertices[self[previd]] - position) * rot, (vertices[self[wallid]] - position) * rot
-        print('A: ' .. tostring(a))
-        print('B: ' .. tostring(b))
 
         --get wall normal
         local wallvect = b - a
         local normal = wallvect * I
-        print('NORM: ' .. tostring(normal))
 
         local dot = normal.x * a.x + normal.y * a.y
 
         --cull: wall is not facing us
         if dot >= 0 then
-            print 'CULL: backface'
             goto continue
         end
 
         --cull: wall is completely behind the near plane
         if a.y < near and b.y < near then
-            print 'CULL: behind near plane'
             goto continue
         end
 
         --if wall is not completely in front of the near plane, then we need to clip it to the near plane
         if not (a.y >= near and b.y >= near) then
-            print 'CLIP'
             local l = line(a - cnear, b - cnear)
             local intersectionpoint = l:lerp(l:intersect(x_axis)) + cnear
             if a.y > b.y then
@@ -201,27 +187,18 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
             end
         end
 
-        print('A:' .. tostring(a))
-        print('B:' .. tostring(b))
         local f_left, f_right = a.x / a.y, b.x / b.y
-        print('FL: ' .. tostring(f_left))
-        print('FR: ' .. tostring(f_right))
 
         local p_left, p_right = math.round(f_left * halfwidth) + 1 + halfwidth, math.round(f_right * halfwidth) + 1 + halfwidth
-        print('PL: ' .. tostring(p_left))
-        print('PR: ' .. tostring(p_right))
 
         --cull: wall is offscreen, even though it is facing us and not behind us
         if p_right <= left then
-            print 'CULL: offscreen to the left'
             goto continue
         end
         if p_left > right then
-            print 'CULL: offscreen to the right'
             goto continue
         end
         if p_right == p_left then
-            print 'CULL: too thin'
             goto continue
         end
 
@@ -232,7 +209,6 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
 
         local portal = self.portals[wallid] ~= 'x' and sectors[self.portals[wallid]] or nil
         if portal then
-            print 'PORTAL'
             table.insert(stack, { sector = portal, left = left_edge, right = right_edge })
             if portal.floor > self.floor then
                 local pfloor = portal.floor - player_height
@@ -260,7 +236,6 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
         local fbd, ftd, ctd, cbd, yd = frb - flb, frt - flt, crt - clt, crb - clb, b.y - a.y
         local fbs, fts, cts, cbs, ys = fbd / steps, ftd / steps, ctd / steps, cbd / steps, yd / steps
 
-        print 'DRAW'
         for c = left_edge + 1, right_edge do
             if top[c] > bottom[c] then
                 local step = c - p_left
@@ -273,7 +248,7 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
                     red, green, blue = red * y, green * y, blue * y
                     col = color.rgb_to_int(red, green, blue)
                     for i = from, to do
-                        set_pixel(c, i, col)
+                        set_pixel(c, i, (i == fb or i == ft or i == cb or i == ct) and 0 or col)
                     end
                 end
 
@@ -331,7 +306,7 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
 
                 --draw wall
                 if not portal then
-                    vline(bottom[c], top[c] - 1, colors.wall)
+                    vline(bottom[c], top[c] - 1, c == p_right and 0 or colors.wall)
                     top[c] = bottom[c]
                 end
             end
