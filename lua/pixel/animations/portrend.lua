@@ -13,7 +13,7 @@ return function()
     val3 = (val3 + inc3) % (math.pi * 2)
     level.position.y = math.sin(val1) * 4 + 10
     level.playerheight = math.sin(val2) * 5 + 10
-    level.angle = val3
+    --    level.angle = val3
     world.render(level, pixel.cols(), pixel.rows(), function(x, y, col)
         pixel.set(y, x, col)
     end)

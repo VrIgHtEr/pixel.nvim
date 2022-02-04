@@ -22,8 +22,8 @@ local colors = {
     ceil = 255 * 65536,
     ceil_step = 255 * 256,
     wall = 255,
-    floor_step = 255 * 256 + 255,
-    floor = 255 * 65536 + 255,
+    floor_step = 255 * 65536 + 255,
+    floor = 255 * 256 + 255,
 }
 
 local MT = {
@@ -285,7 +285,7 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
                     end
                     bottom[c] = ft
                 elseif fb > bottom[c] then
-                    vline(bottom[c], fb - 1, colors.floor_step)
+                    vline(bottom[c], fb - 1, colors.floor)
                     if ft > fb then
                         vline(fb, ft - 1, colors.floor_step)
                     end
