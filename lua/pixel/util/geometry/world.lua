@@ -1,8 +1,18 @@
-local world = {}
 local string = require 'pixel.util.string'
 local complex = require 'pixel.util.math.complex'
 local sector = require 'pixel.util.geometry.sector'
 
+---@class level
+---@field vertices complex[]
+---@field sectors sector[]
+---@field position complex
+---@field angle number
+---@field currentsector number
+
+local world = {}
+
+---@param path string
+---@return level
 function world.load(path)
     local level = { vertices = {}, sectors = {}, position = nil, angle = nil, currentsector = nil }
     local file = io.open(path, 'r')
@@ -111,18 +121,22 @@ function world.load(path)
     end
 
     --TODO: validate player inside sector
+
     level.angle = level.angle - math.pi / 2
     return level
 end
 
+---@param level level
+---@param width number
+---@param height number
+---@param set_pixel function
 function world.render(level, width, height, set_pixel)
     local sect = level.sectors[level.currentsector]
     local player_height = sect.floor + 1
     local stack = { { sector = sect, left = 0, right = width } }
     local top, bottom = {}, {}
     for i = 1, width do
-        top[i] = height
-        bottom[i] = 1
+        top[i], bottom[i] = height + 1, 1
     end
     local rot = complex(math.cos(level.angle), -math.sin(level.angle))
     local halfwidth, halfheight = width / 2, height / 2

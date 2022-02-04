@@ -1,4 +1,17 @@
-local sector = {}
+---@class sector_t
+---@field __type string
+local sector_t = {}
+
+---@class sector : sector_t
+---@field floor number
+---@field ceil number
+---@field portals number[]
+
+---@class render_stack_item
+---@field sector sector
+---@field left number
+---@field right number
+--
 local line = require 'pixel.util.geometry.line'
 local complex = require 'pixel.util.math.complex'
 local math = require 'pixel.util.math'
@@ -9,7 +22,7 @@ end
 
 local MT = {
     __index = function(_, key)
-        return sector[key]
+        return sector_t[key]
     end,
     __newindex = function(tbl, key, value)
         if key ~= '__type' then
@@ -18,7 +31,7 @@ local MT = {
     end,
 }
 
-setmetatable(sector, {
+setmetatable(sector_t, {
     __index = function(_, key)
         if key == '__type' then
             return 'sector'
@@ -29,31 +42,41 @@ setmetatable(sector, {
             rawset(tbl, key, value)
         end
     end,
-    __call = function(_, floor_height, ceiling_height, indices, portals)
-        if #indices >= 3 and #indices == #portals then
-            local ret = setmetatable({ portals = {} }, MT)
-            for i, index in ipairs(indices) do
-                if type(index) ~= 'number' or index < 0 then
-                    return
-                end
-                ret[i] = index + 1
-            end
-            for i, portal in ipairs(portals) do
-                if portal ~= 'x' and (type(portal) ~= 'number' or portal < 0) then
-                    return
-                end
-                ret.portals[i] = portal == 'x' and portal or portal + 1
-            end
-            ret.floor, ret.ceil = tonumber(floor_height), tonumber(ceiling_height)
-            if not ret.floor or not ret.ceil or ret.ceil <= ret.floor then
-                return
-            end
-            return ret
-        end
-    end,
 })
 
-function sector.validate(s, vertices, sectors)
+---@param floor_height number
+---@param ceiling_height number
+---@param indices number[]
+---@param portals number[]
+---@return sector
+local function new(floor_height, ceiling_height, indices, portals)
+    if #indices >= 3 and #indices == #portals then
+        local ret = setmetatable({ portals = {} }, MT)
+        for i, index in ipairs(indices) do
+            if type(index) ~= 'number' or index < 0 then
+                return
+            end
+            ret[i] = index + 1
+        end
+        for i, portal in ipairs(portals) do
+            if portal ~= 'x' and (type(portal) ~= 'number' or portal < 0) then
+                return
+            end
+            ret.portals[i] = portal == 'x' and portal or portal + 1
+        end
+        ret.floor, ret.ceil = tonumber(floor_height), tonumber(ceiling_height)
+        if not ret.floor or not ret.ceil or ret.ceil <= ret.floor then
+            return
+        end
+        return ret
+    end
+end
+
+---@param s sector
+---@param vertices complex[]
+---@param sectors sector[]
+---@return boolean
+function sector_t.validate(s, vertices, sectors)
     --validate that all portals point to valid sectors
     local amt = #sectors
     for _, x in ipairs(s.portals) do
@@ -91,7 +114,21 @@ local near = 0.001
 local cnear = complex(0, near)
 local x_axis = line(complex(0, 0), complex(1, 0))
 
-function sector.render(self, halfwidth, halfheight, position, rot, player_height, stack, vertices, sectors, top, bottom, left, right, set_pixel)
+---@param self sector
+---@param halfwidth number
+---@param halfheight number
+---@param position complex
+---@param rot complex
+---@param player_height number
+---@param stack render_stack_item[]
+---@param vertices complex[]
+---@param sectors sector[]
+---@param top number[]
+---@param bottom number[]
+---@param left number
+---@param right number
+---@param set_pixel function
+function sector_t.render(self, halfwidth, halfheight, position, rot, player_height, stack, vertices, sectors, top, bottom, left, right, set_pixel)
     print '-------------------------------------------'
     print('RENDERING SECTOR : LEFT:' .. tostring(left) .. ' RIGHT=' .. tostring(right))
     local fl, ce = self.floor - player_height, self.ceil - player_height
@@ -242,4 +279,4 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
     end
 end
 
-return sector
+return new
