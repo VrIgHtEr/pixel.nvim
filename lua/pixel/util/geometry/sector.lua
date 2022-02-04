@@ -172,24 +172,15 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
             end
         end
 
-        --make sure a and b are the left and right edges of the wall, respectively
-        if a.x > b.x then
-            a, b = b, a
-        elseif a.x == b.x then
-            if a.x < 0 then
-                if a.y > b.y then
-                    a, b = b, a
-                end
-            else
-                if a.y < b.y then
-                    a, b = b, a
-                end
-            end
-        end
-
         local f_left, f_right = a.x / a.y, b.x / b.y
-
         local p_left, p_right = math.round(f_left * halfwidth) + 1 + halfwidth, math.round(f_right * halfwidth) + 1 + halfwidth
+
+        --make sure a and b are the left and right edges of the wall, respectively
+        if p_left > p_right then
+            p_left, p_right = p_right, p_left
+            f_left, f_right = f_right, f_left
+            a, b = b, a
+        end
 
         --cull: wall is offscreen, even though it is facing us and not behind us
         if p_right <= left then
