@@ -28,8 +28,8 @@ redraw = function()
             cache.begin_transaction()
             local success, err = pcall(options.animation_func)
             cache.end_transaction()
+            M.show()
             if success then
-                M.show()
                 vim.defer_fn(redraw, math.round(1000 / options.framerate))
             else
                 print('DRAWING ERROR: ' .. err)

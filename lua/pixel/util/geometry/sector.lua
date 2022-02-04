@@ -93,7 +93,7 @@ local x_axis = line(complex(0, 0), complex(1, 0))
 
 function sector.render(self, halfwidth, halfheight, position, rot, player_height, stack, vertices, sectors, top, bottom, left, right, set_pixel)
     print '-------------------------------------------'
-    print 'RENDERING SECTOR'
+    print('RENDERING SECTOR : LEFT:' .. tostring(left) .. ' RIGHT=' .. tostring(right))
     local fl, ce = self.floor - player_height, self.ceil - player_height
     for wallid = 1, #self do
         print '---'
@@ -165,21 +165,28 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
         print('PR: ' .. tostring(p_right))
 
         --cull: wall is offscreen, even though it is facing us and not behind us
-        if p_right <= left or p_left > right then
-            print('CULL: right:' .. p_right .. ':' .. left .. '   left:' .. p_left .. ':' .. right)
+        if p_right <= left then
+            print 'CULL: offscreen to the left'
+            goto continue
+        end
+        if p_left > right then
+            print 'CULL: offscreen to the right'
+            goto continue
+        end
+        if p_right == p_left then
+            print 'CULL: too thin'
             goto continue
         end
 
-        local flb, frb = fl / a.y, fl / b.y
-        local clt, crt = ce / a.y, ce / b.y
-        local flt, frt, clb, crb
+        local left_edge, right_edge = math.max(left, p_left), math.min(right, p_right)
 
-        local steps = p_right - p_left
+        local flb, frb, clt, crt = fl / a.y, fl / b.y, ce / a.y, ce / b.y
+        local flt, frt, clb, crb
 
         local portal = self.portals[wallid] ~= 'x' and sectors[self.portals[wallid]] or nil
         if portal then
             print 'PORTAL'
-            table.insert(stack, { sector = portal, left = left, right = right })
+            table.insert(stack, { sector = portal, left = left_edge, right = right_edge })
             if portal.floor > self.floor then
                 local pfloor = portal.floor - player_height
                 flt, frt = pfloor / a.y, pfloor / b.y
@@ -195,6 +202,42 @@ function sector.render(self, halfwidth, halfheight, position, rot, player_height
         else
             flt, frt, clb, crb = flb, frb, clt, crt
         end
+
+        flb, frb, clt, crt =
+            flb * halfheight + halfheight + 1, frb * halfheight + halfheight + 1, clt * halfheight + halfheight + 1, crt * halfheight + halfheight + 1
+        flt, frt, clb, crb =
+            flt * halfheight + halfheight + 1, frt * halfheight + halfheight + 1, clb * halfheight + halfheight + 1, crb * halfheight + halfheight + 1
+
+        local steps = p_right - p_left
+
+        local fbd, ftd, ctd, cbd = frb - flb, frt - flt, crt - clt, crb - clb
+        local fbs, fts, cts, cbs = fbd / steps, ftd / steps, ctd / steps, cbd / steps
+
+        local ceil_color, ceil_step_color = 255 * 65536, 255 * 256
+
+        local function draw_line(column, from, to, color)
+            for y = from, to do
+                set_pixel(column, y, color)
+            end
+        end
+
+        print 'DRAW'
+        for c = left_edge + 1, right_edge do
+            local step = c - p_left
+            local fb, ft, ct, cb = math.floor(fbs * step + flb), math.floor(fts * step + flt), math.floor(cts * step + clt), math.floor(cbs * step + clb)
+            if cb > top[c] then
+                if ct > top[c] then
+                    draw_line(c, top[c] + 1, ct, ceil_color)
+                    if cb > ct then
+                        draw_line(c, ct + 1, cb, ceil_step_color)
+                    end
+                else
+                    draw_line(c, top[c] + 1, cb, ceil_step_color)
+                end
+                top[c] = cb
+            end
+        end
+
         ::continue::
     end
 end

@@ -121,8 +121,8 @@ function world.render(level, width, height, set_pixel)
     local stack = { { sector = sect, left = 0, right = width } }
     local top, bottom = {}, {}
     for i = 1, width do
-        top[i] = 1
-        bottom[i] = height
+        top[i] = height
+        bottom[i] = 1
     end
     local rot = complex(math.cos(level.angle), -math.sin(level.angle))
     local halfwidth, halfheight = width / 2, height / 2
