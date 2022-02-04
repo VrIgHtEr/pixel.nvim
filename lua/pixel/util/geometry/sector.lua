@@ -12,6 +12,8 @@ local sector_t = {}
 ---@field left number
 ---@field right number
 --
+
+local color = require 'pixel.color'
 local line = require 'pixel.util.geometry.line'
 local complex = require 'pixel.util.math.complex'
 local math = require 'pixel.util.math'
@@ -19,6 +21,12 @@ local prt = print
 local print = function(...)
     return prt(...)
 end
+
+local colors = {
+    ceil = 255 * 65536,
+    ceil_step = 255 * 256,
+    wall = 255,
+}
 
 local MT = {
     __index = function(_, key)
@@ -153,7 +161,7 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
         local dot = normal.x * a.x + normal.y * a.y
 
         --cull: wall is not facing us
-        if dot > 0 then
+        if dot >= 0 then
             print 'CULL: backface'
             goto continue
         end
@@ -247,31 +255,83 @@ function sector_t.render(self, halfwidth, halfheight, position, rot, player_heig
 
         local steps = p_right - p_left
 
-        local fbd, ftd, ctd, cbd = frb - flb, frt - flt, crt - clt, crb - clb
-        local fbs, fts, cts, cbs = fbd / steps, ftd / steps, ctd / steps, cbd / steps
+        local fbd, ftd, ctd, cbd, yd = frb - flb, frt - flt, crt - clt, crb - clb, b.y - a.y
+        local fbs, fts, cts, cbs, ys = fbd / steps, ftd / steps, ctd / steps, cbd / steps, yd / steps
 
-        local ceil_color, ceil_step_color = 255 * 65536, 255 * 256
-
-        local function draw_line(column, from, to, color)
+        local function vline(column, from, to, col, distance)
+            distance = 1 - math.min(1, math.max(0, distance / 30))
+            local red, green, blue = color.int_to_rgb(col)
+            red, green, blue = red * distance, green * distance, blue * distance
+            col = color.rgb_to_int(red, green, blue)
             for y = from, to do
-                set_pixel(column, y, color)
+                set_pixel(column, y, col)
             end
         end
 
         print 'DRAW'
         for c = left_edge + 1, right_edge do
-            local step = c - p_left
-            local fb, ft, ct, cb = math.floor(fbs * step + flb), math.floor(fts * step + flt), math.floor(cts * step + clt), math.floor(cbs * step + clb)
-            if cb > top[c] then
-                if ct > top[c] then
-                    draw_line(c, top[c] + 1, ct, ceil_color)
-                    if cb > ct then
-                        draw_line(c, ct + 1, cb, ceil_step_color)
+            if top[c] > bottom[c] then
+                local step = c - p_left
+                local fb, ft, ct, cb, y =
+                    math.floor(fbs * step + flb), math.floor(fts * step + flt), math.floor(cts * step + clt), math.floor(cbs * step + clb), ys * step + a.y
+
+                --draw ceiling
+                if ct <= bottom[c] then
+                    vline(c, bottom[c], top[c] - 1, colors.ceil, y)
+                    top[c] = cb
+                elseif cb <= bottom[c] then
+                    if ct < top[c] then
+                        vline(c, ct, top[c] - 1, colors.ceil_step, y)
+                        if cb < ct then
+                            vline(c, bottom[c], ct - 1, colors.ceil_step, y)
+                        end
+                    else
+                        vline(c, bottom[c], top[c] - 1, colors.ceil_step, y)
                     end
-                else
-                    draw_line(c, top[c] + 1, cb, ceil_step_color)
+                    top[c] = cb
+                elseif cb < top[c] then
+                    if ct < top[c] then
+                        vline(c, ct, top[c] - 1, colors.ceil, y)
+                        if cb < ct then
+                            vline(c, cb, ct - 1, colors.ceil_step, y)
+                        end
+                    else
+                        vline(c, cb, top[c] - 1, colors.ceil_step, y)
+                    end
+                    top[c] = cb
                 end
-                top[c] = cb
+
+                --draw floor
+                if ct <= bottom[c] then
+                    vline(c, bottom[c], top[c] - 1, colors.ceil, y)
+                    top[c] = cb
+                elseif cb <= bottom[c] then
+                    if ct < top[c] then
+                        vline(c, ct, top[c] - 1, colors.ceil_step, y)
+                        if cb < ct then
+                            vline(c, bottom[c], ct - 1, colors.ceil_step, y)
+                        end
+                    else
+                        vline(c, bottom[c], top[c] - 1, colors.ceil_step, y)
+                    end
+                    top[c] = cb
+                elseif cb < top[c] then
+                    if ct < top[c] then
+                        vline(c, ct, top[c] - 1, colors.ceil, y)
+                        if cb < ct then
+                            vline(c, cb, ct - 1, colors.ceil_step, y)
+                        end
+                    else
+                        vline(c, cb, top[c] - 1, colors.ceil_step, y)
+                    end
+                    top[c] = cb
+                end
+
+                --draw wall
+                if not portal then
+                    vline(c, bottom[c], top[c] - 1, colors.wall, y)
+                    top[c] = bottom[c]
+                end
             end
         end
 

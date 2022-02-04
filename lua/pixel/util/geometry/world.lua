@@ -131,15 +131,19 @@ end
 ---@param height number
 ---@param set_pixel function
 function world.render(level, width, height, set_pixel)
+    local set_pix = function(x, y, col)
+        y = height - y + 1
+        set_pixel(x, y, col)
+    end
     local sect = level.sectors[level.currentsector]
-    local player_height = sect.floor + 1
+    local player_height = sect.floor + (sect.ceil - sect.floor) / 2
     local stack = { { sector = sect, left = 0, right = width } }
     local top, bottom = {}, {}
     for i = 1, width do
         top[i], bottom[i] = height + 1, 1
     end
     local rot = complex(math.cos(level.angle), -math.sin(level.angle))
-    local halfwidth, halfheight = width / 2, height / 2
+    local halfwidth, halfheight = width / 2, height / 2 / 2
     while #stack > 0 do
         local next = table.remove(stack)
         next.sector:render(
@@ -155,10 +159,9 @@ function world.render(level, width, height, set_pixel)
             bottom,
             next.left,
             next.right,
-            set_pixel
+            set_pix
         )
     end
-    error 'FINISHED'
 end
 
 return world

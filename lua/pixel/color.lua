@@ -10,7 +10,7 @@ local math = require 'pixel.util.math'
 ---@param i number
 ---@return number
 function M.int_to_rgb(i)
-    return bit.band(bit.rshift(i, 16), 255, bit.band(bit.rshift(i, 8), 255, bit.band(i, 255)))
+    return bit.band(bit.rshift(i, 16), 255), bit.band(bit.rshift(i, 8), 255), bit.band(i, 255)
 end
 
 function M.rgb_to_int(r, g, b)
