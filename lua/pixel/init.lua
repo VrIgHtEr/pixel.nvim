@@ -201,8 +201,8 @@ function M.show()
     end
 
     vim.api.nvim_buf_set_option(buf, 'modifiable', true)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
     vim.api.nvim_buf_clear_namespace(buf, options.ns, 0, -1)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
     for _, h in ipairs(hl) do
         vim.api.nvim_buf_add_highlight(buf, options.ns, h.hl, h.row, h.col, h.col_end)
     end
