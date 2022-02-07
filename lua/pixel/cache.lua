@@ -66,6 +66,10 @@ local function group_name(id)
 end
 
 function M.use_color_pair(a, b)
+    local inverted = false
+    if a > b then
+        a, b, inverted = b, a, true
+    end
     local cached = hlcache[a]
     if not cached then
         cached = { count = 0 }
@@ -93,7 +97,7 @@ function M.use_color_pair(a, b)
         end
     end
     cached.refcount = cached.refcount + 1
-    return cached.group
+    return cached.group, inverted
 end
 
 function M.unuse_highlight(hl)

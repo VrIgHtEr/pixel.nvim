@@ -17,9 +17,8 @@ local buf = nil
 local grid = {}
 local highlights = {}
 
-local char = '▀'
+local char, ichar = '▀', '▄'
 local charlen = char:len()
-local lines
 
 local redraw
 redraw = function()
@@ -95,15 +94,6 @@ function M.setup(opts)
             row[j] = cache.use_color_pair(col1, col2)
         end
     end
-    lines = {}
-    lines[1] = {}
-    for c = 1, options.cols do
-        lines[1][c] = char
-    end
-    lines[1] = table.concat(lines[1])
-    for r = 2, math.floor((options.rows + 1) / 2) do
-        lines[r] = lines[1]
-    end
     options.setup_pending = false
 end
 
@@ -149,9 +139,10 @@ function M.toggle()
 end
 
 local function render()
-    local hl = {}
+    local hl, lines = {}, {}
     local max = math.floor((options.rows + 1) / 2)
     for r = 1, max do
+        local line = {}
         local r2 = r * 2
         local r1 = r2 - 1
         local hl_col_index = 0
@@ -165,26 +156,28 @@ local function render()
                 col2 = 0
             end
             cache.unuse_highlight(row[c])
-            row[c] = cache.use_color_pair(col1, col2)
+            local inverted
+            row[c], inverted = cache.use_color_pair(col1, col2)
+            line[c] = inverted and ichar or char
             local newhlindex = hl_col_index + charlen
             table.insert(hl, { row = r - 1, col = hl_col_index, col_end = newhlindex, hl = row[c] })
             hl_col_index = newhlindex
         end
+        lines[r] = table.concat(line)
     end
-    return hl
+    return hl, lines
 end
 
 function M.show()
     if options.setup_pending then
         return
     end
-    local hl = render()
+    local hl, lines = render()
     if not buf then
         buf = vim.api.nvim_create_buf(false, true)
         vim.api.nvim_buf_set_option(buf, 'filetype', 'philips_hue_map')
         vim.api.nvim_buf_set_option(buf, 'fileencoding', 'utf-8')
         vim.api.nvim_buf_set_option(buf, 'undolevels', -1)
-        vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
     end
 
     if not win then
@@ -208,8 +201,8 @@ function M.show()
     end
 
     vim.api.nvim_buf_set_option(buf, 'modifiable', true)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
     vim.api.nvim_buf_clear_namespace(buf, options.ns, 0, -1)
-
     for _, h in ipairs(hl) do
         vim.api.nvim_buf_add_highlight(buf, options.ns, h.hl, h.row, h.col, h.col_end)
     end
