@@ -3,6 +3,7 @@ local animations = {
     require 'pixel.animations.fire',
     require 'pixel.animations.sine',
     require 'pixel.animations.random',
+    require 'pixel.animations.portrend',
 }
 
 local frames_per_cycle = 150
