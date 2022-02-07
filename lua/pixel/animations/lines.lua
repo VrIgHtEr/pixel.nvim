@@ -38,7 +38,13 @@ local function update_vertex(v)
 end
 
 return function()
-    drawing.clear()
+    local decay = 0.5
+    for y = 1, pixel.rows() do
+        for x = 1, pixel.cols() do
+            local r, g, b = colors.int_to_rgb(pixel.get(y, x))
+            pixel.set(y, x, colors.rgb_to_int(math.floor(r * decay), math.floor(g * decay), math.floor(b * decay)))
+        end
+    end
     for _, x in ipairs(vertices) do
         update_vertex(x)
     end
