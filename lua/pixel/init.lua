@@ -2,6 +2,7 @@ local M = {}
 
 local cache = require 'pixel.cache'
 local math = require 'pixel.util.math'
+local co = coroutine
 
 local options = {
     setup_pending = true,
@@ -20,17 +21,26 @@ local highlights = {}
 local char, ichar = '▀', '▄'
 local charlen = char:len()
 
+local draw_coroutine = nil
+
 local redraw
 redraw = function()
     if win then
         if options.animation_func then
             cache.begin_transaction()
-            local success, err = pcall(options.animation_func)
+            if not draw_coroutine then
+                draw_coroutine = co.create(options.animation_func)
+            end
+            local success, err = co.resume(draw_coroutine)
             cache.end_transaction()
             M.show()
             if success then
+                if co.status(draw_coroutine) == 'dead' then
+                    draw_coroutine = nil
+                end
                 vim.defer_fn(redraw, math.round(1000 / options.framerate))
             else
+                draw_coroutine = nil
                 print('DRAWING ERROR: ' .. err)
             end
         end
