@@ -38,7 +38,7 @@ local function update_vertex(v)
 end
 
 return function()
-    local decay = 0.5
+    local decay = 0.85
     for y = 1, pixel.rows() do
         for x = 1, pixel.cols() do
             local r, g, b = colors.int_to_rgb(pixel.get(y, x))
