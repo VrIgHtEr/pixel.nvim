@@ -1,4 +1,4 @@
-local string = require 'pixel.util.string'
+local string = require 'toolshed.util.string'
 local complex = require 'pixel.util.math.complex'
 local sector = require 'pixel.util.geometry.sector'
 
