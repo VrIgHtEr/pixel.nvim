@@ -1,0 +1,2 @@
+local sixel = {}
+return sixel
