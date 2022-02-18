@@ -1,5 +1,6 @@
 local terminal = {}
 
+local string = require 'toolshed.util.string'
 local stdout = vim.loop.new_pipe(false)
 stdout:open(1)
 
@@ -12,20 +13,18 @@ local function write_next(data)
     local ret = vim.loop.write(stdout, data, function(err)
         if err then
             faulted, writing, fault = true, false, err
-        else
-            if queue:size() > 0 then
-                if queue:size() == 1 then
-                    write_next(queue:dequeue())
-                else
-                    local group = {}
-                    for i = 1, queue:size() do
-                        group[i] = queue:dequeue()
-                    end
-                    write_next(table.concat(group))
-                end
+        elseif queue:size() > 0 then
+            if queue:size() == 1 then
+                write_next(queue:dequeue())
             else
-                writing = false
+                local group = {}
+                for i = 1, queue:size() do
+                    group[i] = queue:dequeue()
+                end
+                write_next(group)
             end
+        else
+            writing = false
         end
     end)
     if not ret then
@@ -45,6 +44,9 @@ local function write(data)
     end
 end
 
+function terminal.last_error()
+    return faulted, fault
+end
 function terminal.begin_transaction()
     transaction_count = transaction_count + 1
 end
@@ -58,7 +60,7 @@ function terminal.end_transaction()
                 for i = 1, queue:size() do
                     group[i] = queue:dequeue()
                 end
-                write_next(table.concat(group))
+                write_next(group)
             end
         end
     end
@@ -86,13 +88,17 @@ function terminal.write(...)
     end
 end
 
-function terminal.execute_at(row, col, func)
+function terminal.execute_at(row, col, func, ...)
     terminal.begin_transaction()
-    write '\x1b[s' -- save position
+    write '\x1b[s'
     write('\x1b[' .. math.floor(math.abs(row)) .. ';' .. math.floor(math.abs(col)) .. 'H')
-    pcall(func)
+    local ret = { pcall(func, row, col, ...) }
     write '\x1b[u'
-
     terminal.end_transaction()
+    if not ret[1] then
+        return nil, ret[2]
+    end
+    return unpack(ret, 1)
 end
+
 return terminal
