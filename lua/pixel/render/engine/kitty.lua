@@ -52,30 +52,64 @@ local function send_cmd(cmd, data)
     cmd, data = cmd or '', chunks(string.base64_encode(data or ''))
     local num_chunks = #data
     if cmd == '' or num_chunks <= 1 then
-        write('\x1b_G', cmd, ';')
+        local esc = { '\x1b_G', cmd, ';' }
         if num_chunks == 1 then
-            write(data[1])
+            table.insert(esc, data[1])
         end
-        write '\x1b\\'
+        table.insert(esc, '\x1b\\')
+        write(table.concat(esc))
     else
         for i = 1, num_chunks do
-            write '\x1b_G'
+            local esc = { '\x1b_G' }
             if i == 1 then
-                write(cmd)
+                table.insert(esc, cmd)
                 if cmd ~= '' then
-                    write ','
+                    table.insert(esc, ',')
                 end
             end
-            write('m=', i == num_chunks and '0' or '1')
-            write(';', data[i], '\x1b\\')
+            table.insert(esc, 'm=')
+            table.insert(esc, i == num_chunks and '0;' or '1;')
+            table.insert(esc, data[i])
+            table.insert(esc, '\x1b\\')
+            write(table.concat(esc))
         end
     end
     dump()
-    print 'written!'
 end
-
 terminal.execute_at(10, 100, function()
-    send_cmd('a=T,f=100,q=2,C=1', read_file '/home/cedric/Pictures/dice.png')
+    send_cmd('a=T,f=100,q=2,i=1,p=1', read_file '/home/cedric/dice.png')
 end)
+--vim.defer_fn(function() transmit(string.base64_encode(read_file '/home/cedric/dice.png')) end, 0)
+local my_image = require('hologram.image'):new {
+    source = '/home/cedric/dice.png',
+    row = 11,
+    col = 0,
+}
+--[[
+my_image:transmit() -- send image data to terminal
 
+-- Move image 5 rows down after 1 second
+vim.defer_fn(function()
+    my_image:move(15, 0)
+    my_image:adjust() -- must adjust to update image
+end, 1000)
+
+-- Crop image to 100x100 pixels after 2 seconds
+vim.defer_fn(function()
+    my_image:adjust {
+        crop = { 100, 100 },
+    }
+end, 2000)
+
+-- Resize image to 75x50 pixels after 3 seconds
+vim.defer_fn(function()
+    my_image:adjust {
+        area = { 75, 50 },
+    }
+end, 3000)
+
+vim.defer_fn(function()
+    my_image:delete()
+end, 4000)
+]]
 return kitty
