@@ -32,6 +32,7 @@ local function write(data)
         if transaction_count > 0 or writing then
             queue:enqueue(data)
         else
+            queue:enqueue(data)
             commit()
         end
     end
