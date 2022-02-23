@@ -32,16 +32,17 @@ kitty.constants = {
     compression = { zlib_deflate = 'z' },
     transmission_medium = { direct = 'd', file = 'f', temp_file = 't', shared_memory = 's' },
     continuation = { in_progress = '1', finished = '0' },
-    action = { query = 'q', delete = 'd', transmit = 't', transmit_and_display = 'T' },
+    action = { query = 'q', delete = 'd', transmit = 't', transmit_and_display = 'T', put = 'p' },
     quiet = { ok = '1', errors = '2' },
 }
+
 local valid_keys = {}
 for _, v in pairs(kitty.constants.control_keys) do
     valid_keys[v] = true
 end
 
 local function chunks(data, size)
-    size = math.floor(math.abs(size or 4096))
+    size = math.floor(math.abs(size or 512))
     assert(size > 0, 'size cannot be negative')
     local len = data:len()
     local blocks = math.floor((len + size - 1) / size)
