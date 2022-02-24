@@ -68,7 +68,8 @@ function image:destroy()
     kitty.send_cmd { a = 'd', i = self.id }
 end
 
-local frame_change_max, frame_change_counter, direction = 3, 0, 1
+local animating = false
+local frame_change_max, frame_change_counter, direction = 4, 0, 1
 local function display_next()
     local cell_width = math.floor(win_w / cols)
     local xcell = math.floor(xpos / cell_width)
@@ -101,6 +102,7 @@ local function display_next()
         vim.defer_fn(display_next, anim_delay)
     else
         image:destroy()
+        animating = false
     end
 end
 
@@ -132,14 +134,18 @@ local function discover_win_size(cb)
         end, 100)
     end
 end
+
 function image.its_a_meee()
-    discover_win_size(function()
-        vim.schedule(function()
-            img:transmit()
-            xpos = 0
-            display_next()
+    if not animating then
+        animating = true
+        discover_win_size(function()
+            vim.schedule(function()
+                img:transmit()
+                xpos = 0
+                display_next()
+            end)
         end)
-    end)
+    end
 end
 
 img = image.new { src = data_path .. '/mario.png' }
