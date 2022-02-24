@@ -7,5 +7,9 @@ return {
         local mul = 6
         require('pixel').setup { rows = 9 * mul + bit.band(mul, 1), cols = 16 * mul, framerate = 25 }
         require('pixel').set_animation(require 'pixel.animations.cycle')
+        local term = vim.fn.getenv 'TERM'
+        if term == 'xterm-kitty' or term == 'wezterm' then
+            require('pixel.render.image').lets_a_gooo()
+        end
     end,
 }

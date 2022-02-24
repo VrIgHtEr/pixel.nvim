@@ -70,6 +70,10 @@ end
 
 local animating = false
 local frame_change_max, frame_change_counter, direction = 4, 0, 1
+function image.lets_a_gooo()
+    vim.defer_fn(image.its_a_meee, (math.random(120) - 1 + 60 * 4) * 1000)
+end
+
 local function display_next()
     local cell_width = math.floor(win_w / cols)
     local xcell = math.floor(xpos / cell_width)
@@ -103,6 +107,7 @@ local function display_next()
     else
         image:destroy()
         animating = false
+        image.lets_a_gooo()
     end
 end
 
