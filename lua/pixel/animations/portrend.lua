@@ -1,7 +1,7 @@
 local pixel = require 'pixel'
 local drawing = require 'pixel.drawing'
 local world = require 'pixel.util.geometry.world'
-local level = world.load(vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/map2.txt')
+local level = world.load(vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/map.txt')
 
 local inc1, inc2, inc3 = 0.05, 0.07, 0.06
 local val1, val2, val3 = 0, 0, 0
