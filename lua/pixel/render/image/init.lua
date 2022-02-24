@@ -17,19 +17,19 @@ local defaults = {
     format = format.png,
 }
 
-local offset_x, offset_y = 8, 4
-local width_x, width_y = 40, 40
+local sprite_offset_x, sprite_offset_y = 8, 4
+local sprite_w, sprite_h = 40, 40
 
 local data_path = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data'
 local img
 
-local counter = 30
 local sprite_x, sprite_y = 0, 0
 local anim_delay = 25 * 4
 
 local terminal = require 'pixel.render.terminal'
 
 local cols, rows = terminal.size()
+local xpos, xinc = 0, 5
 
 function image.new(opts)
     opts = opts == nil and {} or opts
@@ -63,19 +63,18 @@ end
 function image:destroy()
     kitty.send_cmd { a = 'd', i = self.id }
 end
-local xpos, xinc = 0, 5
+
 local function display_next()
     local cell_width = math.floor(win_w / cols)
-    local x = xpos
+    local xcell = math.floor(xpos / cell_width)
+    local xoff = xpos - xcell * cell_width
     xpos = xpos + xinc
-    local xcell = math.floor(x / cell_width)
-    local xoff = x - xcell * cell_width
     terminal.execute_at(rows - 2, xcell + 1, function()
         img:display {
-            x = sprite_x * width_x + offset_x,
-            y = sprite_y * width_y + offset_y,
-            w = width_x,
-            h = width_y,
+            x = sprite_offset_x + sprite_x * sprite_w,
+            y = sprite_offset_y + sprite_y * sprite_h,
+            w = sprite_w,
+            h = sprite_h,
             q = 2,
             p = 1,
             C = 1,
@@ -83,9 +82,7 @@ local function display_next()
             X = xoff,
         }
     end)
-    sprite_x = sprite_x + 1
-    sprite_x = sprite_x == 3 and 0 or sprite_x
-    counter = counter - 1
+    sprite_x = sprite_x == 2 and 0 or (sprite_x + 1)
     if xpos < win_w then
         vim.defer_fn(display_next, anim_delay)
     else
