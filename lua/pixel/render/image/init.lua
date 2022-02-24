@@ -17,8 +17,8 @@ local defaults = {
     format = format.png,
 }
 
-local sprite_offset_x, sprite_offset_y = 8, 4
-local sprite_w, sprite_h = 40, 40
+local sprite_offset_x, sprite_offset_y = 0, 0
+local sprite_w, sprite_h = 16, 16
 
 local data_path = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data'
 local img
