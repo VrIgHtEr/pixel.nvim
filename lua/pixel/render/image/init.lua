@@ -42,15 +42,19 @@ function image.new(opts)
         id = img_id,
         placements = {},
     }, MT)
-    local data = util.read_file(opts.src)
+    ret.src = opts.src
+    return ret
+end
+
+function image:transmit()
+    local data = util.read_file(self.src)
     kitty.send_cmd({
         a = 't',
         t = 'd',
         f = 100,
-        i = ret.id,
+        i = self.id,
         q = 2,
     }, data)
-    return ret
 end
 
 function image:display(opts)
@@ -128,12 +132,15 @@ local function discover_win_size(cb)
         end, 100)
     end
 end
-
-discover_win_size(function()
-    vim.schedule(function()
-        img = image.new { src = data_path .. '/mario.png' }
-        xpos = 0
-        display_next()
+function image.its_a_meee()
+    discover_win_size(function()
+        vim.schedule(function()
+            img:transmit()
+            xpos = 0
+            display_next()
+        end)
     end)
-end)
+end
+
+img = image.new { src = data_path .. '/mario.png' }
 return image
