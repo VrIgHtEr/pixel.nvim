@@ -1,6 +1,8 @@
 local image = {}
 local util = require 'pixel.util'
 local kitty = require 'pixel.render.engine.kitty'
+local stdin = vim.loop.new_tty(0, true)
+local win_w, win_h
 
 local img_id = 0
 
@@ -23,12 +25,11 @@ local img
 
 local counter = 30
 local sprite_x, sprite_y = 0, 0
-local anim_delay = 100
+local anim_delay = 25
 
 local terminal = require 'pixel.render.terminal'
 
-local rows = vim.api.nvim_get_option 'lines'
-local cols = vim.api.nvim_get_option 'columns'
+local rows, cols = terminal.size()
 
 function image.new(opts)
     opts = opts == nil and {} or opts
@@ -62,9 +63,14 @@ end
 function image:destroy()
     kitty.send_cmd { a = 'd', i = self.id }
 end
-
+local xpos, xinc = 0, 5
 local function display_next()
-    terminal.execute_at(rows - 2, 0, function()
+    local cell_width = 9
+    local x = xpos
+    xpos = xpos + xinc
+    local xcell = math.floor(x / cell_width)
+    local xoff = x - xcell * cell_width
+    terminal.execute_at(rows - 2, xcell, function()
         img:display {
             x = sprite_x * width_x + offset_x,
             y = sprite_y * width_y + offset_y,
@@ -72,19 +78,56 @@ local function display_next()
             h = width_y,
             q = 2,
             p = 1,
+            C = 1,
+            z = -1,
+            X = xoff,
         }
     end)
     sprite_x = sprite_x + 1
     sprite_x = sprite_x == 3 and 0 or sprite_x
     counter = counter - 1
-    if counter > 0 then
+    if xpos < win_w then
         vim.defer_fn(display_next, anim_delay)
     else
         image:destroy()
     end
 end
-vim.schedule(function()
-    img = image.new { src = data_path .. '/mario.png' }
-    display_next()
+
+local function discover_win_size(cb)
+    if stdin then
+        stdin:read_start(function(_, data)
+            if data then
+                local len = data:len()
+                if len >= 8 and data:sub(len, len) == 't' and data:sub(1, 4) == '\x1b[4;' then
+                    data = data:sub(5, len - 1)
+                    len = len - 5
+                    local idx = data:find ';'
+                    if idx then
+                        win_h, win_w = tonumber(data:sub(1, idx - 1)), tonumber(data:sub(idx + 1))
+                    end
+                end
+            end
+        end)
+        terminal.write '\x1b[14t'
+        vim.defer_fn(function()
+            if stdin then
+                stdin:read_stop()
+            end
+            if not win_w or not win_h then
+                discover_win_size(cb)
+            else
+                cb()
+            end
+        end, 100)
+    end
+end
+
+discover_win_size(function()
+    vim.schedule(function()
+        img = image.new { src = data_path .. '/mario.png' }
+        xpos = 0
+        display_next()
+    end)
 end)
+
 return image

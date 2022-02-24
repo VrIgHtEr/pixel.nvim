@@ -1,8 +1,7 @@
 local terminal = {}
 
 local uv = vim.loop
-local stdout = uv.new_pipe(false)
-stdout:open(1)
+local stdout = uv.new_tty(1, false)
 terminal.stdout = stdout
 
 local queue = require('toolshed.util.generic.queue').new()
@@ -91,6 +90,10 @@ function terminal.execute_at(row, col, func, ...)
         return nil, ret[2]
     end
     return unpack(ret, 1)
+end
+
+function terminal.size()
+    return uv.tty_get_winsize(stdout)
 end
 
 return terminal
