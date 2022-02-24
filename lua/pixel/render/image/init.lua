@@ -25,11 +25,11 @@ local img
 
 local counter = 30
 local sprite_x, sprite_y = 0, 0
-local anim_delay = 25
+local anim_delay = 25 * 4
 
 local terminal = require 'pixel.render.terminal'
 
-local rows, cols = terminal.size()
+local cols, rows = terminal.size()
 
 function image.new(opts)
     opts = opts == nil and {} or opts
@@ -65,7 +65,7 @@ function image:destroy()
 end
 local xpos, xinc = 0, 5
 local function display_next()
-    local cell_width = 9
+    local cell_width = math.floor(win_w / cols)
     local x = xpos
     xpos = xpos + xinc
     local xcell = math.floor(x / cell_width)
@@ -129,5 +129,4 @@ discover_win_size(function()
         display_next()
     end)
 end)
-
 return image
