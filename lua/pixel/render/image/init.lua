@@ -64,7 +64,7 @@ function image:destroy()
     kitty.send_cmd { a = 'd', i = self.id }
 end
 
-local frame_change_max, frame_change_counter = 3, 0
+local frame_change_max, frame_change_counter, direction = 3, 0, 1
 local function display_next()
     local cell_width = math.floor(win_w / cols)
     local xcell = math.floor(xpos / cell_width)
@@ -85,7 +85,13 @@ local function display_next()
     end)
     frame_change_counter = frame_change_counter + 1
     if frame_change_counter == frame_change_max then
-        frame_change_counter, sprite_x = 0, sprite_x == 2 and 0 or (sprite_x + 1)
+        frame_change_counter = 0
+        if sprite_x == 0 then
+            direction = 1
+        elseif sprite_x == 2 then
+            direction = -1
+        end
+        sprite_x = sprite_x + direction
     end
     if xpos < win_w then
         vim.defer_fn(display_next, anim_delay)
