@@ -70,7 +70,7 @@ local function display_next()
     xpos = xpos + xinc
     local xcell = math.floor(x / cell_width)
     local xoff = x - xcell * cell_width
-    terminal.execute_at(rows - 2, xcell, function()
+    terminal.execute_at(rows - 2, xcell + 1, function()
         img:display {
             x = sprite_x * width_x + offset_x,
             y = sprite_y * width_y + offset_y,
