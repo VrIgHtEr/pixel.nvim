@@ -1,7 +1,7 @@
 local image = {}
+local stdin = vim.loop.new_tty(0, true)
 local util = require 'pixel.util'
 local kitty = require 'pixel.render.engine.kitty'
-local stdin = vim.loop.new_tty(0, true)
 
 local img_id = 0
 
@@ -16,17 +16,7 @@ local defaults = {
     format = format.png,
 }
 
-local data_path = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data'
-local img
-
-local sprite_x, sprite_y = 0, 0
-local anim_delay = 25
-
 local terminal = require 'pixel.render.terminal'
-
-local cols, rows, cell_w, cell_h, win_h, win_w
-local xpos, xinc = 0, 1
-local character_rows = 0
 
 function image.new(opts)
     opts = opts == nil and {} or opts
@@ -166,7 +156,7 @@ function image:display(opts)
             return true
         end
         opts.crop.x, opts.crop.w, left = opts.crop.x - left, opts.crop.w + left, 0
-    elseif left >= win_w or right <= 0 then
+    elseif left >= image.win_w or right <= 0 then
         return true
     end
     if top < 0 then
@@ -174,19 +164,19 @@ function image:display(opts)
             return true
         end
         opts.crop.y, opts.crop.h, top = opts.crop.y - top, opts.crop.h + top, 0
-    elseif top >= win_h or bottom <= 0 then
+    elseif top >= image.win_h or bottom <= 0 then
         return true
     end
 
-    if bottom > win_h then
-        opts.crop.h = opts.crop.h - (bottom - win_h)
+    if bottom > image.win_h then
+        opts.crop.h = opts.crop.h - (bottom - image.win_h)
     end
-    if right > win_w then
-        opts.crop.w = opts.crop.w - (right - win_w)
+    if right > image.win_w then
+        opts.crop.w = opts.crop.w - (right - image.win_w)
     end
 
-    local xcell, ycell = math.floor(left / cell_w), math.floor(top / cell_h)
-    cmd.X, cmd.Y = left % cell_w, top % cell_h
+    local xcell, ycell = math.floor(left / image.cell_w), math.floor(top / image.cell_h)
+    cmd.X, cmd.Y = left % image.cell_w, top % image.cell_h
     cmd.x, cmd.y, cmd.w, cmd.h = opts.crop.x, opts.crop.y, opts.crop.w, opts.crop.h
     cmd.p = opts.placement
     cmd.z = opts.z
@@ -197,62 +187,10 @@ function image:display(opts)
 end
 
 function image:destroy()
-    kitty.send_cmd { a = 'd', i = self.id }
+    kitty.send_cmd { a = 'd', i = self.id, p = 1 }
 end
 
-local animating = false
-local frame_change_max, frame_change_counter, sprite_x_dir = 4, 0, 1
-function image.lets_a_gooo()
-    vim.defer_fn(image.its_a_meee, (math.random(60) - 1 + 30) * 1000)
-end
-
-local sprite_w, sprite_h = 32, 32
-local character_dir = {}
-local character = nil
-
-local function display_next()
-    local success, err = img:display {
-        pos = {
-            x = math.floor(xpos),
-            y = (rows - 2) * cell_h - 1,
-        },
-        placement = 1,
-        z = -1,
-        crop = {
-            x = sprite_x * sprite_w,
-            y = ((character - 1) * 2 + (character_dir[character] == 0 and 0 or 1)) * sprite_h,
-            w = sprite_w,
-            h = sprite_h,
-        },
-        anchor = character_dir[character] == 0 and 3 or 2,
-    }
-    if not success then
-        print(err)
-        return
-    end
-    xpos = xpos + xinc
-    frame_change_counter = frame_change_counter + 1
-    if frame_change_counter == frame_change_max then
-        frame_change_counter = 0
-        if sprite_x == 0 then
-            sprite_x_dir = 1
-        elseif sprite_x == 2 then
-            sprite_x_dir = -1
-        end
-        sprite_x = sprite_x + sprite_x_dir
-    end
-    if character_dir[character] == 0 and xpos < win_w or character_dir[character] ~= 0 and xpos >= 0 then
-        vim.defer_fn(display_next, anim_delay)
-    else
-        image:destroy()
-        character_dir[character] = 1 - character_dir[character]
-        character = math.random(1, character_rows)
-        animating = false
-        image.lets_a_gooo()
-    end
-end
-
-local function discover_win_size(cb)
+function image.discover_win_size(cb)
     if stdin then
         stdin:read_start(function(_, data)
             if data then
@@ -262,10 +200,9 @@ local function discover_win_size(cb)
                     len = len - 5
                     local idx = data:find ';'
                     if idx then
-                        win_h, win_w, cols, rows = tonumber(data:sub(1, idx - 1)), tonumber(data:sub(idx + 1)), terminal.size()
-                        cell_w, cell_h = math.floor(win_w / cols), math.floor(win_h / rows)
-                        win_h, win_w = cell_h * rows, cell_w * cols
-                        character_rows = math.floor(img.size.y / (sprite_h * 2))
+                        image.win_h, image.win_w, image.cols, image.rows = tonumber(data:sub(1, idx - 1)), tonumber(data:sub(idx + 1)), terminal.size()
+                        image.cell_w, image.cell_h = math.floor(image.win_w / image.cols), math.floor(image.win_h / image.rows)
+                        image.win_h, image.win_w = image.cell_h * image.rows, image.cell_w * image.cols
                     end
                 end
             end
@@ -275,8 +212,8 @@ local function discover_win_size(cb)
             if stdin then
                 stdin:read_stop()
             end
-            if not win_w or not win_h then
-                discover_win_size(cb)
+            if not image.win_w or not image.win_h then
+                image.discover_win_size(cb)
             else
                 cb()
             end
@@ -284,28 +221,4 @@ local function discover_win_size(cb)
     end
 end
 
-function image.its_a_meee()
-    if not animating then
-        animating = true
-        discover_win_size(function()
-            vim.schedule(function()
-                if character_rows > 0 then
-                    if not character then
-                        character = math.random(1, character_rows)
-                    end
-                    img:transmit()
-                    if not character_dir[character] then
-                        character_dir[character] = math.random(0, 1)
-                    end
-                    xinc = character_dir[character] == 0 and 1 or -1
-                    xpos = character_dir[character] == 0 and (-sprite_w + 1) or (win_w + sprite_w - 1)
-                    display_next()
-                end
-            end)
-        end)
-    end
-end
-
-img = image.new { src = data_path .. '/mario.png' }
-img.size = { x = 96, y = 128 }
 return image

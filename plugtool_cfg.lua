@@ -1,3 +1,5 @@
+local mario = require 'pixel.mario'
+
 return {
     config = function()
         vim.o.termguicolors = true
@@ -9,7 +11,7 @@ return {
         require('pixel').set_animation(require 'pixel.animations.cycle')
         local term = vim.fn.getenv 'TERM'
         if term == 'xterm-kitty' or term == 'wezterm' then
-            --            require('pixel.render.image').lets_a_gooo()
+            mario.its_a_meee()
         end
     end,
 }
