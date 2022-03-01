@@ -10,7 +10,7 @@ return {
         require('pixel').set_animation(require 'pixel.animations.cycle')
         local term = vim.fn.getenv 'TERM'
         if term == 'xterm-kitty' or term == 'wezterm' then
-            mario.its_a_meee()
+            mario.lets_a_gooo()
         end
     end,
 }

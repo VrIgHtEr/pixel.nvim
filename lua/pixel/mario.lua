@@ -75,10 +75,6 @@ local function next_state(c)
     end
 end
 
-function mario.its_a_meee()
-    vim.schedule(mario.lets_a_gooo)
-end
-
 local function display_next()
     if started then
         if stopping then
@@ -107,7 +103,7 @@ function mario.lets_a_gooo()
     end
 end
 
-function mario.oh_no()
+function mario.oh_nooo()
     if not started and not stopping then
         stopping = true
     end
