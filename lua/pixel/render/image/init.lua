@@ -186,8 +186,11 @@ function image:display(opts)
     return true
 end
 
-function image:destroy()
-    kitty.send_cmd { a = 'd', i = self.id, p = 1 }
+function image:destroy(p)
+    if type(p) ~= 'number' then
+        p = 0
+    end
+    kitty.send_cmd { a = 'd', i = self.id, p = p }
 end
 
 function image.discover_win_size(cb)

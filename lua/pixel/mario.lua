@@ -10,10 +10,25 @@ local started = false
 local sprite_w, sprite_h = 32, 32
 
 local characters = {}
-local frame_change_max = 4
+local frame_change_max = 3
 
 local function next_state(char)
     if char.state == 'animating' then
+        img:display {
+            pos = {
+                x = math.floor(char.xpos),
+                y = (image.rows - 2) * image.cell_h - 1,
+            },
+            placement = char.p,
+            z = char.z,
+            crop = {
+                x = char.sprite_x * sprite_w,
+                y = ((char.p - 1) * 2 + (char.dir == 0 and 0 or 1)) * sprite_h,
+                w = sprite_w,
+                h = sprite_h,
+            },
+            anchor = char.dir == 0 and 3 or 2,
+        }
         char.xpos = char.xpos + char.xinc
         char.frame_change_counter = char.frame_change_counter + 1
         if char.frame_change_counter == frame_change_max then
@@ -26,6 +41,7 @@ local function next_state(char)
             char.sprite_x = char.sprite_x + char.sprite_x_dir
         end
         if (char.dir ~= 0 or char.xpos >= image.win_w) and (char.dir == 0 or char.xpos < 0) then
+            img:destroy(char.p)
             char.state = 'idle'
             return next_state(char)
         end
@@ -43,6 +59,8 @@ local function next_state(char)
     end
 end
 
+math.randomseed(os.time())
+
 for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
     characters[i] = {
         z = -i,
@@ -58,32 +76,15 @@ for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
 end
 
 function mario.its_a_meee()
-    vim.defer_fn(mario.lets_a_gooo, math.random(10) * 1000)
+    vim.schedule(mario.lets_a_gooo)
 end
 
 local terminal = require 'pixel.render.terminal'
 local function display_next()
     if started then
         terminal.begin_transaction()
-        for i, char in ipairs(characters) do
+        for _, char in ipairs(characters) do
             next_state(char)
-            if char.state == 'animating' then
-                img:display {
-                    pos = {
-                        x = math.floor(char.xpos),
-                        y = (image.rows - 2) * image.cell_h - 1,
-                    },
-                    placement = char.p,
-                    z = char.z,
-                    crop = {
-                        x = char.sprite_x * sprite_w,
-                        y = ((i - 1) * 2 + (char.dir == 0 and 0 or 1)) * sprite_h,
-                        w = sprite_w,
-                        h = sprite_h,
-                    },
-                    anchor = char.dir == 0 and 3 or 2,
-                }
-            end
         end
         terminal.end_transaction()
         vim.defer_fn(display_next, anim_delay)
