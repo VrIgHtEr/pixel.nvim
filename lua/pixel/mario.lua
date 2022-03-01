@@ -1,7 +1,6 @@
 local mario = {}
-local data_path = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data'
 local image = require 'pixel.render.image'
-local img = image.new { src = data_path .. '/mario.png' }
+local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
 img.size = { x = 96, y = 128 }
 img:transmit()
 local anim_delay = 40
