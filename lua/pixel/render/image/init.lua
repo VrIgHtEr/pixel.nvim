@@ -208,7 +208,7 @@ end
 
 local sprite_w, sprite_h = 32, 32
 local character_dir = {}
-local character = 1
+local character = nil
 
 local function display_next()
     local success, err = img:display {
@@ -290,12 +290,15 @@ function image.its_a_meee()
         discover_win_size(function()
             vim.schedule(function()
                 if character_rows > 0 then
+                    if not character then
+                        character = math.random(1, character_rows)
+                    end
                     img:transmit()
                     if not character_dir[character] then
                         character_dir[character] = math.random(0, 1)
                     end
                     xinc = character_dir[character] == 0 and 1 or -1
-                    xpos = character_dir[character] == 0 and -16 or (win_w + sprite_w - 1)
+                    xpos = character_dir[character] == 0 and (-sprite_w + 1) or (win_w + sprite_w - 1)
                     display_next()
                 end
             end)
@@ -304,5 +307,5 @@ function image.its_a_meee()
 end
 
 img = image.new { src = data_path .. '/mario.png' }
-img.size = { x = 48, y = 64 }
+img.size = { x = 96, y = 128 }
 return image
