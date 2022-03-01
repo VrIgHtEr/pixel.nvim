@@ -203,7 +203,7 @@ end
 local animating = false
 local frame_change_max, frame_change_counter, sprite_x_dir = 4, 0, 1
 function image.lets_a_gooo()
-    vim.defer_fn(image.its_a_meee, (math.random(120) - 1 + 60 * 4) * 1000)
+    vim.defer_fn(image.its_a_meee, (math.random(60) - 1 + 30) * 1000)
 end
 
 local sprite_w, sprite_h = 32, 32
