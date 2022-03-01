@@ -304,5 +304,5 @@ function image.its_a_meee()
 end
 
 img = image.new { src = data_path .. '/mario.png' }
-img.size = { x = 48, y = 32 }
+img.size = { x = 48, y = 64 }
 return image
