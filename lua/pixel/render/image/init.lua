@@ -60,12 +60,6 @@ local function validate_opts(self, opts)
         return util.error('TYPE', type(opts))
     end
 
-    for _, v in pairs(kitty.constants.control_keys) do
-        if opts[v] ~= nil then
-            return util.error('DISALLOWED', v)
-        end
-    end
-
     if opts.pos ~= nil and type(opts.pos) ~= 'table' then
         return util.error('pos', 'TYPE', type(opts.pos))
     end
@@ -138,12 +132,18 @@ local function validate_opts(self, opts)
         end
         opts.placement = math.floor(opts.placement)
     end
+    if opts.z ~= nil then
+        if type(opts.z) ~= 'number' then
+            return util.error('placement', 'TYPE', type(opts.z))
+        end
+        opts.z = math.floor(opts.z)
+    end
 
     return opts
 end
 
 function image:display(opts)
-    local cmd = { a = 'p', i = self.id, z = -1, C = 1, q = 2 }
+    local cmd = { a = 'p', i = self.id, C = 1, q = 2 }
     do
         local e
         opts, e = validate_opts(self, opts)
@@ -160,7 +160,7 @@ function image:display(opts)
         while y > cell_h do
             ycell, y = ycell - 1, y - cell_h
         end
-        cmd.Y = cell_h - y
+        cmd.Y = cell_h - y - 1
     else
         cmd.Y = opts.pos.y % cell_h
     end
@@ -169,7 +169,7 @@ function image:display(opts)
         while x > cell_w do
             xcell, x = xcell - 1, x - cell_w
         end
-        cmd.X = cell_w - x
+        cmd.X = cell_w - x - 1
     else
         cmd.X = opts.pos.x % cell_w
     end
@@ -177,9 +177,8 @@ function image:display(opts)
     cmd.y = opts.crop.y
     cmd.w = opts.crop.w
     cmd.h = opts.crop.h
-    if opts.placement then
-        cmd.p = opts.placement
-    end
+    cmd.p = opts.placement
+    cmd.z = opts.z
     terminal.execute_at(ycell + 1, xcell + 1, function()
         kitty.send_cmd(cmd)
     end)
@@ -203,6 +202,7 @@ local function display_next()
             y = (rows - 2) * cell_h,
         },
         placement = 1,
+        z = -1,
         crop = { x = sprite_x * 16, y = sprite_y * 16, w = 16, h = 16 },
         anchor = 3,
         args = { p = 1 },
