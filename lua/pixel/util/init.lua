@@ -28,4 +28,12 @@ function M.reverse(tbl)
     return tbl
 end
 
+function M.error(...)
+    local p = { ... }
+    for i, x in ipairs(p) do
+        p[i] = tostring(x):gsub('\\\\', '\\\\'):gsub(':', '\\:')
+    end
+    return nil, table.concat(p, ':')
+end
+
 return M

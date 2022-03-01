@@ -1,6 +1,7 @@
 local kitty = {}
 local string = require 'toolshed.util.string'
 local terminal = require 'pixel.render.terminal'
+local util = require 'pixel.util'
 
 kitty.constants = {
     control_keys = {
@@ -62,6 +63,23 @@ local function build_cmd(cmd)
         end
     end
     return table.concat(ret, ',')
+end
+
+function kitty.validate(opts)
+    opts = opts == nil and {} or opts
+    if type(opts) ~= 'table' then
+        return util.error('TYPE', type(opts))
+    end
+    for k, v in pairs(opts) do
+        if not valid_keys[k] then
+            return util.error('KEY', k)
+        end
+        local t = type(v)
+        if t ~= 'number' then
+            return util.error(k, 'TYPE', t)
+        end
+    end
+    return opts
 end
 
 function kitty.send_cmd(cmd, data)
