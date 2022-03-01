@@ -32,13 +32,13 @@ local function next_state(c)
             z = c.z,
             crop = {
                 x = c.sprite_x * sprite_w,
-                y = ((c.p - 1) * 2 + (c.dir == 0 and 0 or 1)) * sprite_h,
+                y = ((c.p - 1) * 2 + (c.dir and 0 or 1)) * sprite_h,
                 w = sprite_w,
                 h = sprite_h,
             },
-            anchor = c.dir == 0 and 3 or 2,
+            anchor = c.dir and 3 or 2,
         }
-        if (c.dir ~= 0 or c.xpos >= image.win_w) and (c.dir == 0 or c.xpos < 0) then
+        if (not c.dir or c.xpos >= image.win_w) and (c.dir or c.xpos < 0) then
             c.placement.hide()
             c.state = 'idle'
             return next_state(c)
@@ -46,9 +46,9 @@ local function next_state(c)
     elseif c.state == 'idle' then
         c.state = 'waiting'
         c.counter = math.random(25, 25 * 156)
-        c.dir = 1 - c.dir
-        c.xinc = c.dir == 0 and 1 or -1
-        c.xpos = c.dir == 0 and -sprite_w or (image.win_w + sprite_w)
+        c.dir = not c.dir
+        c.xinc = c.dir and 1 or -1
+        c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
     elseif c.state == 'waiting' then
         c.counter = c.counter - 1
         if c.counter == 0 then
@@ -65,7 +65,7 @@ for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
         state = 'idle',
         xpos = 0,
         xinc = 0,
-        dir = math.random(0, 1),
+        dir = math.random(0, 1) == 0,
         sprite_x_dir = 1,
         sprite_x = 0,
         frame_change_counter = 0,
