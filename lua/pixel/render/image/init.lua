@@ -132,6 +132,7 @@ local function validate_opts(self, opts)
         end
         opts.placement = math.floor(opts.placement)
     end
+
     if opts.z ~= nil then
         if type(opts.z) ~= 'number' then
             return util.error('placement', 'TYPE', type(opts.z))
@@ -154,27 +155,38 @@ function image:display(opts)
     if opts.crop.w == 0 or opts.crop.h == 0 then
         return true
     end
-    local top, left, xcell, ycell
-    if opts.anchor > 1 then
-        top = opts.pos.y - opts.crop.h + 1
-    else
-        top = opts.pos.y
-    end
-    ycell = math.floor(top / cell_h)
-    cmd.Y = top % cell_h
 
-    if opts.anchor == 1 or opts.anchor == 2 then
-        left = opts.pos.x - opts.crop.w + 1
-    else
-        left = opts.pos.x
-    end
-    xcell = math.floor(left / cell_w)
-    cmd.X = left % cell_w
+    local top = opts.anchor > 1 and (opts.pos.y - opts.crop.h + 1) or opts.pos.y
+    local left = (opts.anchor == 1 or opts.anchor == 2) and (opts.pos.x - opts.crop.w + 1) or opts.pos.x
+    local bottom, right = top + opts.crop.w, left + opts.crop.h
 
-    cmd.x = opts.crop.x
-    cmd.y = opts.crop.y
-    cmd.w = opts.crop.w
-    cmd.h = opts.crop.h
+    if left < 0 then
+        if -left >= opts.crop.w then
+            return true
+        end
+        opts.crop.x, opts.crop.w, left = opts.crop.x - left, opts.crop.w + left, 0
+    elseif left >= win_w or right <= 0 then
+        return true
+    end
+    if top < 0 then
+        if -top >= opts.crop.h then
+            return true
+        end
+        opts.crop.y, opts.crop.h, top = opts.crop.y - top, opts.crop.h + top, 0
+    elseif top >= win_h or bottom <= 0 then
+        return true
+    end
+
+    if bottom > win_h then
+        opts.crop.h = opts.crop.h - (bottom - win_h)
+    end
+    if right > win_w then
+        opts.crop.w = opts.crop.w - (right - win_w)
+    end
+
+    local xcell, ycell = math.floor(left / cell_w), math.floor(top / cell_h)
+    cmd.X, cmd.Y = left % cell_w, top % cell_h
+    cmd.x, cmd.y, cmd.w, cmd.h = opts.crop.x, opts.crop.y, opts.crop.w, opts.crop.h
     cmd.p = opts.placement
     cmd.z = opts.z
     terminal.execute_at(ycell + 1, xcell + 1, function()
@@ -203,10 +215,10 @@ local function display_next()
         z = -1,
         crop = { x = sprite_x * 16, y = sprite_y * 16, w = 16, h = 16 },
         anchor = 3,
-        args = { p = 1 },
     }
     if not success then
         print(err)
+        return
     end
     xpos = xpos + xinc
     frame_change_counter = frame_change_counter + 1
@@ -265,7 +277,7 @@ function image.its_a_meee()
         discover_win_size(function()
             vim.schedule(function()
                 img:transmit()
-                xpos = 0
+                xpos = -16
                 display_next()
             end)
         end)
