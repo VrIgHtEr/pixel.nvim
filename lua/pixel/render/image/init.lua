@@ -154,25 +154,23 @@ function image:display(opts)
     if opts.crop.w == 0 or opts.crop.h == 0 then
         return true
     end
-    local xcell, ycell = math.floor(opts.pos.x / cell_w), math.floor(opts.pos.y / cell_h)
+    local top, left, xcell, ycell
     if opts.anchor > 1 then
-        local y = self.size.y
-        while y > cell_h do
-            ycell, y = ycell - 1, y - cell_h
-        end
-        cmd.Y = cell_h - y - 1
+        top = opts.pos.y - opts.crop.h + 1
     else
-        cmd.Y = opts.pos.y % cell_h
+        top = opts.pos.y
     end
+    ycell = math.floor(top / cell_h)
+    cmd.Y = top % cell_h
+
     if opts.anchor == 1 or opts.anchor == 2 then
-        local x = self.size.x
-        while x > cell_w do
-            xcell, x = xcell - 1, x - cell_w
-        end
-        cmd.X = cell_w - x - 1
+        left = opts.pos.x - opts.crop.w + 1
     else
-        cmd.X = opts.pos.x % cell_w
+        left = opts.pos.x
     end
+    xcell = math.floor(left / cell_w)
+    cmd.X = left % cell_w
+
     cmd.x = opts.crop.x
     cmd.y = opts.crop.y
     cmd.w = opts.crop.w
@@ -199,7 +197,7 @@ local function display_next()
     local success, err = img:display {
         pos = {
             x = math.floor(xpos),
-            y = (rows - 2) * cell_h,
+            y = (rows - 2) * cell_h - 1,
         },
         placement = 1,
         z = -1,
