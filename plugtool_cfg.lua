@@ -9,7 +9,7 @@ return {
         require('pixel').set_animation(require 'pixel.animations.cycle')
         local term = vim.fn.getenv 'TERM'
         if term == 'xterm-kitty' or term == 'wezterm' then
-            require('pixel.render.image').lets_a_gooo()
+            --            require('pixel.render.image').lets_a_gooo()
         end
     end,
 }

@@ -129,12 +129,14 @@ local function validate_opts(self, opts)
     end
     opts.anchor = math.floor(opts.anchor)
 
-    do
-        local args, err = kitty.validate(opts.args)
-        if not args then
-            return util.error('args', err)
+    if opts.placement ~= nil then
+        if type(opts.placement) ~= 'number' then
+            return util.error('placement', 'TYPE', type(opts.placement))
         end
-        opts.args = args
+        if opts.placement < 1 then
+            return util.error('placement', 'VALUE', opts.placement)
+        end
+        opts.placement = math.floor(opts.placement)
     end
 
     return opts
@@ -159,6 +161,8 @@ function image:display(opts)
             ycell, y = ycell - 1, y - cell_h
         end
         cmd.Y = cell_h - y
+    else
+        cmd.Y = opts.pos.y % cell_h
     end
     if opts.anchor == 1 or opts.anchor == 2 then
         local x = self.size.x
@@ -166,13 +170,15 @@ function image:display(opts)
             xcell, x = xcell - 1, x - cell_w
         end
         cmd.X = cell_w - x
+    else
+        cmd.X = opts.pos.x % cell_w
     end
     cmd.x = opts.crop.x
     cmd.y = opts.crop.y
     cmd.w = opts.crop.w
     cmd.h = opts.crop.h
-    if opts.args then
-        vim.tbl_extend('keep', cmd, opts.args)
+    if opts.placement then
+        cmd.p = opts.placement
     end
     terminal.execute_at(ycell + 1, xcell + 1, function()
         kitty.send_cmd(cmd)
@@ -194,8 +200,9 @@ local function display_next()
     local success, err = img:display {
         pos = {
             x = math.floor(xpos),
-            y = (rows - 3) * cell_h,
+            y = (rows - 2) * cell_h,
         },
+        placement = 1,
         crop = { x = sprite_x * 16, y = sprite_y * 16, w = 16, h = 16 },
         anchor = 3,
         args = { p = 1 },
