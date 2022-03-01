@@ -9,7 +9,7 @@ local started = false
 local sprite_w, sprite_h = 32, 32
 
 local characters = {}
-local frame_change_max = 3
+local frame_change_max = 4
 
 local function next_state(char)
     if char.state == 'animating' then
