@@ -58,7 +58,7 @@ local function display_next()
         image:destroy()
         character_dir[character] = 1 - character_dir[character]
         animating = false
-        image.lets_a_gooo()
+        mario.its_a_mee()
     end
 end
 
