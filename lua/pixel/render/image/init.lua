@@ -25,12 +25,13 @@ function image.new(opts)
         error 'src not provided'
     end
     img_id = img_id + 1
-    local ret = setmetatable({
+    return setmetatable({
         id = img_id,
         placements = {},
+        placement_ids = {},
+        last_placement_id = 0,
+        src = opts.src,
     }, MT)
-    ret.src = opts.src
-    return ret
 end
 
 function image:transmit()
@@ -186,11 +187,56 @@ function image:display(opts)
     return true
 end
 
-function image:destroy(p)
+function image:hide(p)
     if type(p) ~= 'number' then
         p = 0
     end
     kitty.send_cmd { a = 'd', i = self.id, p = p }
+end
+
+function image:create_placement()
+    local placement_id
+    local active = true
+    local hidden = true
+    if #self.placement_ids > 0 then
+        placement_id = table.remove(self.placement_ids)
+    else
+        self.last_placement_id = self.last_placement_id + 1
+        placement_id = self.last_placement_id
+    end
+    if not self.placements[placement_id] then
+        self.placements[placement_id] = 1
+    else
+        self.placements[placement_id] = self.placements[placement_id] + 1
+    end
+    local placement = {}
+    function placement.display(opts)
+        if active then
+            opts.placement = placement_id
+            self:display(opts)
+            hidden = false
+        end
+    end
+    function placement.hide()
+        if active then
+            if not hidden then
+                self:hide(placement_id)
+                hidden = true
+            end
+        end
+    end
+    function placement.destroy()
+        if active then
+            placement.hide()
+            self.placements[placement_id] = self.placements[placement_id] - 1
+            if self.placements[placement_id] == 0 then
+                self.placements[placement_id] = nil
+                table.insert(self.placement_ids, placement_id)
+            end
+            active = false
+        end
+    end
+    return placement
 end
 
 function image.discover_win_size(cb)
