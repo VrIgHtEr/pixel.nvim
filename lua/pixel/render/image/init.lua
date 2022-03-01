@@ -26,6 +26,7 @@ local terminal = require 'pixel.render.terminal'
 
 local cols, rows, cell_w, cell_h, win_h, win_w
 local xpos, xinc = 0, 1
+local character_rows = 0
 
 function image.new(opts)
     opts = opts == nil and {} or opts
@@ -200,10 +201,14 @@ function image:destroy()
 end
 
 local animating = false
-local frame_change_max, frame_change_counter, direction = 4, 0, 1
+local frame_change_max, frame_change_counter, sprite_x_dir = 4, 0, 1
 function image.lets_a_gooo()
     vim.defer_fn(image.its_a_meee, (math.random(120) - 1 + 60 * 4) * 1000)
 end
+
+local sprite_w, sprite_h = 16, 16
+local character_dir = {}
+local character = 1
 
 local function display_next()
     local success, err = img:display {
@@ -213,8 +218,13 @@ local function display_next()
         },
         placement = 1,
         z = -1,
-        crop = { x = sprite_x * 16, y = sprite_y * 16, w = 16, h = 16 },
-        anchor = 3,
+        crop = {
+            x = sprite_x * sprite_w,
+            y = ((character - 1) * 2 + (character_dir[character] == 0 and 0 or 1)) * sprite_h,
+            w = sprite_w,
+            h = sprite_h,
+        },
+        anchor = character_dir[character] == 0 and 3 or 2,
     }
     if not success then
         print(err)
@@ -225,16 +235,18 @@ local function display_next()
     if frame_change_counter == frame_change_max then
         frame_change_counter = 0
         if sprite_x == 0 then
-            direction = 1
+            sprite_x_dir = 1
         elseif sprite_x == 2 then
-            direction = -1
+            sprite_x_dir = -1
         end
-        sprite_x = sprite_x + direction
+        sprite_x = sprite_x + sprite_x_dir
     end
-    if xpos < win_w then
+    if character_dir[character] == 0 and xpos < win_w or character_dir[character] ~= 0 and xpos >= 0 then
         vim.defer_fn(display_next, anim_delay)
     else
         image:destroy()
+        character_dir[character] = 1 - character_dir[character]
+        character = math.random(1, character_rows)
         animating = false
         image.lets_a_gooo()
     end
@@ -253,6 +265,7 @@ local function discover_win_size(cb)
                         win_h, win_w, cols, rows = tonumber(data:sub(1, idx - 1)), tonumber(data:sub(idx + 1)), terminal.size()
                         cell_w, cell_h = math.floor(win_w / cols), math.floor(win_h / rows)
                         win_h, win_w = cell_h * rows, cell_w * cols
+                        character_rows = math.floor(img.size.y / (sprite_h * 2))
                     end
                 end
             end
@@ -276,9 +289,15 @@ function image.its_a_meee()
         animating = true
         discover_win_size(function()
             vim.schedule(function()
-                img:transmit()
-                xpos = -16
-                display_next()
+                if character_rows > 0 then
+                    img:transmit()
+                    if not character_dir[character] then
+                        character_dir[character] = math.random(0, 1)
+                    end
+                    xinc = character_dir[character] == 0 and 1 or -1
+                    xpos = character_dir[character] == 0 and -16 or (win_w + sprite_w - 1)
+                    display_next()
+                end
             end)
         end)
     end
