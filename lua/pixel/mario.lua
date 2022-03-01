@@ -4,78 +4,98 @@ local image = require 'pixel.render.image'
 local img = image.new { src = data_path .. '/mario.png' }
 img.size = { x = 96, y = 128 }
 img:transmit()
-local anim_delay = 25
+local anim_delay = 40
+local started = false
 
 local sprite_w, sprite_h = 32, 32
 
-local character_rows = math.floor(img.size.y / (sprite_h * 2))
-local xpos, xinc = 0, 1
-local character_dir = {}
-local character = nil
-local frame_change_max, frame_change_counter, sprite_x_dir = 4, 0, 1
-local animating = false
+local characters = {}
+local frame_change_max = 4
+
+local function next_state(char)
+    if char.state == 'animating' then
+        char.xpos = char.xpos + char.xinc
+        char.frame_change_counter = char.frame_change_counter + 1
+        if char.frame_change_counter == frame_change_max then
+            char.frame_change_counter = 0
+            if char.sprite_x == 0 then
+                char.sprite_x_dir = 1
+            elseif char.sprite_x == 2 then
+                char.sprite_x_dir = -1
+            end
+            char.sprite_x = char.sprite_x + char.sprite_x_dir
+        end
+        if (char.dir ~= 0 or char.xpos >= image.win_w) and (char.dir == 0 or char.xpos < 0) then
+            char.state = 'idle'
+            return next_state(char)
+        end
+    elseif char.state == 'idle' then
+        char.state = 'waiting'
+        char.counter = math.random(25, 25 * 10)
+        char.dir = 1 - char.dir
+        char.xinc = char.dir == 0 and 1 or -1
+        char.xpos = char.dir == 0 and (-sprite_w + 1) or (image.win_w + sprite_w - 1)
+    elseif char.state == 'waiting' then
+        char.counter = char.counter - 1
+        if char.counter == 0 then
+            char.state = 'animating'
+        end
+    end
+end
+
+for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
+    characters[i] = {
+        z = -i,
+        p = i,
+        state = 'idle',
+        xpos = 0,
+        xinc = 0,
+        dir = math.random(0, 1),
+        sprite_x_dir = 1,
+        sprite_x = 0,
+        frame_change_counter = 0,
+    }
+end
 
 function mario.its_a_meee()
     vim.defer_fn(mario.lets_a_gooo, math.random(10) * 1000)
 end
 
-local sprite_x = 0
-
+local terminal = require 'pixel.render.terminal'
 local function display_next()
-    local success, err = img:display {
-        pos = {
-            x = math.floor(xpos),
-            y = (image.rows - 2) * image.cell_h - 1,
-        },
-        placement = 1,
-        z = -1,
-        crop = {
-            x = sprite_x * sprite_w,
-            y = ((character - 1) * 2 + (character_dir[character] == 0 and 0 or 1)) * sprite_h,
-            w = sprite_w,
-            h = sprite_h,
-        },
-        anchor = character_dir[character] == 0 and 3 or 2,
-    }
-    if not success then
-        print(err)
-        return
-    end
-    xpos = xpos + xinc
-    frame_change_counter = frame_change_counter + 1
-    if frame_change_counter == frame_change_max then
-        frame_change_counter = 0
-        if sprite_x == 0 then
-            sprite_x_dir = 1
-        elseif sprite_x == 2 then
-            sprite_x_dir = -1
+    if started then
+        terminal.begin_transaction()
+        for i, char in ipairs(characters) do
+            next_state(char)
+            if char.state == 'animating' then
+                img:display {
+                    pos = {
+                        x = math.floor(char.xpos),
+                        y = (image.rows - 2) * image.cell_h - 1,
+                    },
+                    placement = char.p,
+                    z = char.z,
+                    crop = {
+                        x = char.sprite_x * sprite_w,
+                        y = ((i - 1) * 2 + (char.dir == 0 and 0 or 1)) * sprite_h,
+                        w = sprite_w,
+                        h = sprite_h,
+                    },
+                    anchor = char.dir == 0 and 3 or 2,
+                }
+            end
         end
-        sprite_x = sprite_x + sprite_x_dir
-    end
-    if character_dir[character] == 0 and xpos < image.win_w or character_dir[character] ~= 0 and xpos >= 0 then
+        terminal.end_transaction()
         vim.defer_fn(display_next, anim_delay)
-    else
-        image:destroy()
-        character_dir[character] = 1 - character_dir[character]
-        animating = false
-        mario.its_a_meee()
     end
 end
 
 function mario.lets_a_gooo()
-    if not animating then
-        animating = true
+    if not started then
+        started = true
         image.discover_win_size(function()
             vim.schedule(function()
-                if character_rows > 0 then
-                    character = math.random(1, character_rows)
-                    if not character_dir[character] then
-                        character_dir[character] = math.random(0, 1)
-                    end
-                    xinc = character_dir[character] == 0 and 1 or -1
-                    xpos = character_dir[character] == 0 and (-sprite_w + 1) or (image.win_w + sprite_w - 1)
-                    display_next()
-                end
+                display_next()
             end)
         end)
     end
