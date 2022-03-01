@@ -206,7 +206,7 @@ function image.lets_a_gooo()
     vim.defer_fn(image.its_a_meee, (math.random(120) - 1 + 60 * 4) * 1000)
 end
 
-local sprite_w, sprite_h = 16, 16
+local sprite_w, sprite_h = 32, 32
 local character_dir = {}
 local character = 1
 
