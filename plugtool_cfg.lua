@@ -1,16 +1,13 @@
-local mario = require 'pixel.mario'
-
 return {
     config = function()
+        local pixel = require 'pixel'
         vim.o.termguicolors = true
         nnoremap('<leader>sp', ':lua require"pixel".toggle()<cr>', 'silent', 'Pixel: switch on and off pixel display')
         nnoremap('<leader>sP', ':lua require"pixel".toggle_colors()<cr>', 'silent', 'Pixel: toggle colors')
+        nnoremap('<leader>mario', ':lua require"pixel.mario".its_a_meee()<cr>', 'silent', 'Pixel: toggle little buddies')
         local mul = 6
-        require('pixel').setup { rows = 9 * mul + bit.band(mul, 1), cols = 16 * mul, framerate = 25 }
-        require('pixel').set_animation(require 'pixel.animations.cycle')
-        local term = vim.fn.getenv 'TERM'
-        if term == 'xterm-kitty' or term == 'wezterm' then
-            mario.lets_a_gooo()
-        end
+        pixel.setup { rows = 9 * mul + bit.band(mul, 1), cols = 16 * mul, framerate = 25 }
+        pixel.set_animation(require 'pixel.animations.cycle')
+        require('pixel.mario').wahooo()
     end,
 }

@@ -5,65 +5,14 @@ local image, terminal = require 'pixel.render.image', require 'pixel.render.term
 local sprite_w, sprite_h = 32, 32
 local fps = 25
 
-print(vim.inspect(vim.api.nvim_get_runtime_file('pixel/data/mario', false)))
+local runtime_files = vim.api.nvim_get_runtime_file('data', true)
+local img
+table.sort(runtime_files)
+for _, x in ipairs(runtime_files) do
+    print(x)
+end
 
-local characters = {
-    {
-        anim = {
-            x = 0,
-            y = 0,
-            w = sprite_w,
-            h = sprite_h,
-            frames = 3,
-            stride_x = sprite_w,
-            stride_y = sprite_h,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 64,
-            w = sprite_w,
-            h = sprite_h,
-            frames = 3,
-            stride_x = sprite_w,
-            stride_y = sprite_h,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 128,
-            w = sprite_w,
-            h = sprite_h,
-            frames = 2,
-            stride_x = sprite_w,
-            stride_y = sprite_h,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 192,
-            w = sprite_w,
-            h = sprite_h,
-            frames = 2,
-            stride_x = sprite_w,
-            stride_y = sprite_h,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 256,
-            w = sprite_w,
-            h = sprite_h,
-            frames = 3,
-            stride_x = sprite_w,
-            stride_y = sprite_h,
-        },
-    },
-}
+local characters
 
 local function exec_characters(key)
     for _, c in ipairs(characters) do
@@ -71,14 +20,70 @@ local function exec_characters(key)
     end
 end
 
-do
-    local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/pixel/data/mario.png' }
+local function init_characters()
+    characters = {
+        {
+            anim = {
+                x = 0,
+                y = 0,
+                w = sprite_w,
+                h = sprite_h,
+                frames = 3,
+                stride_x = sprite_w,
+                stride_y = sprite_h,
+            },
+        },
+        {
+            anim = {
+                x = 0,
+                y = 64,
+                w = sprite_w,
+                h = sprite_h,
+                frames = 3,
+                stride_x = sprite_w,
+                stride_y = sprite_h,
+            },
+        },
+        {
+            anim = {
+                x = 0,
+                y = 128,
+                w = sprite_w,
+                h = sprite_h,
+                frames = 2,
+                stride_x = sprite_w,
+                stride_y = sprite_h,
+            },
+        },
+        {
+            anim = {
+                x = 0,
+                y = 192,
+                w = sprite_w,
+                h = sprite_h,
+                frames = 2,
+                stride_x = sprite_w,
+                stride_y = sprite_h,
+            },
+        },
+        {
+            anim = {
+                x = 0,
+                y = 256,
+                w = sprite_w,
+                h = sprite_h,
+                frames = 3,
+                stride_x = sprite_w,
+                stride_y = sprite_h,
+            },
+        },
+    }
+    img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
     img.size = { x = 96, y = 320 }
     img:transmit()
     local num_frames = math.floor(img.size.x / sprite_w)
     for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
         local c = characters[i]
-        local a = c.anim
         c.z = -i
         c.p = i
         c.placement = img:create_placement()
@@ -170,6 +175,7 @@ function mario.lets_a_gooo()
     if not started and not stopping then
         started = true
         stopping = false
+        init_characters()
         image.discover_win_size(vim.schedule_wrap(draw))
     end
 end
@@ -177,6 +183,23 @@ end
 function mario.oh_nooo()
     if started and not stopping then
         stopping = true
+    end
+end
+
+function mario.its_a_meee()
+    if started then
+        if not stopping then
+            mario.oh_nooo()
+        end
+    else
+        mario.lets_a_gooo()
+    end
+end
+
+function mario.wahooo()
+    local term = vim.fn.getenv 'TERM'
+    if term == 'xterm-kitty' or term == 'wezterm' then
+        mario.lets_a_gooo()
     end
 end
 
