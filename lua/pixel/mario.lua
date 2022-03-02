@@ -5,6 +5,8 @@ local image, terminal = require 'pixel.render.image', require 'pixel.render.term
 local sprite_w, sprite_h = 32, 32
 local fps = 25
 
+print(vim.inspect(vim.api.nvim_get_runtime_file('pixel/data/mario', false)))
+
 local characters = {
     {
         anim = {
@@ -70,7 +72,7 @@ local function exec_characters(key)
 end
 
 do
-    local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
+    local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/pixel/data/mario.png' }
     img.size = { x = 96, y = 320 }
     img:transmit()
     local num_frames = math.floor(img.size.x / sprite_w)
