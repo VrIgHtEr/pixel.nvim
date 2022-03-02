@@ -15,7 +15,7 @@ end
 
 do
     local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
-    img.size = { x = 96, y = 128 }
+    img.size = { x = 96, y = 320 }
     img:transmit()
     local num_frames = math.floor(img.size.x / sprite_w)
     for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
@@ -29,7 +29,7 @@ do
             xinc = 0,
             dir = math.random(0, 1) == 0,
             sprite_sheet_strip_col_index = 0,
-            num_frames = num_frames,
+            num_frames = num_frames - ((i == 3 or i == 4) and 1 or 0),
             sprite_sheet_strip_index = (i - 1) * 2 * sprite_h,
             anim_divisor = 3,
             hide = function()
