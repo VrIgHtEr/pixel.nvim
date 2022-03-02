@@ -6,6 +6,13 @@ local sprite_w, sprite_h = 32, 32
 local fps = 25
 
 local characters = {}
+
+local function exec(key)
+    for _, c in ipairs(characters) do
+        c[key]()
+    end
+end
+
 do
     local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
     img.size = { x = 96, y = 128 }
@@ -23,45 +30,50 @@ do
             dir = math.random(0, 1) == 0,
             sprite_x = 0,
             num_frames = num_frames,
-            speed = 1,
             sprite_sheet_strip_index = (i - 1) * 2 * sprite_h,
             anim_divisor = 3,
             hide = function()
                 c.placement.hide()
             end,
-            update = function()
+            display = function(opts)
+                c.placement.display(opts)
+            end,
+            update = function(state)
+                if state then
+                    c.state = state
+                end
                 if c.state == 'animating' then
-                    c.xpos = c.xpos + c.xinc
+                    c.xpos = c.xpos + c.xinc * c.speed
                     c.sprite_x = math.floor((c.frame_counter / c.anim_divisor * c.speed) % (c.num_frames > 1 and c.num_frames - 2 + c.num_frames or 1))
                     if c.sprite_x >= c.num_frames then
                         c.sprite_x = num_frames - 1 + num_frames - c.sprite_x
                     end
                     c.frame_counter = c.frame_counter + 1
-                    c.placement.display {
+                    c.display {
                         pos = {
                             x = math.floor(c.xpos),
-                            y = (image.rows - 2) * image.cell_h - 1,
+                            y = math.floor((image.rows - 2) * image.cell_h - 1),
                         },
-                        z = c.z,
                         crop = {
                             x = c.sprite_x * sprite_w,
-                            y = c.sprite_sheet_strip_index + (c.dir and 0 or 1) * sprite_h,
+                            y = c.sprite_sheet_strip_index + (c.dir and 0 or sprite_h),
                             w = sprite_w,
                             h = sprite_h,
                         },
+                        z = c.z,
                         anchor = c.dir and 3 or 2,
                     }
                     if (not c.dir or c.xpos >= image.win_w) and (c.dir or c.xpos < 0) then
-                        c.placement.hide()
-                        c.state = 'idle'
-                        return c.update()
+                        return c.update 'idle'
                     end
                 elseif c.state == 'idle' then
+                    c.hide()
                     c.state = 'waiting'
                     c.counter = math.random(25, 25 * 156)
                     c.dir = not c.dir
                     c.xinc = c.dir and 1 or -1
                     c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
+                    c.speed = math.random() * 2 + 1
                     c.frame_counter = 0
                 elseif c.state == 'waiting' then
                     c.counter = c.counter - 1
@@ -77,12 +89,6 @@ end
 
 local started = false
 local stopping = false
-
-local function exec(key)
-    for _, c in ipairs(characters) do
-        c[key]()
-    end
-end
 
 local function draw()
     if started then
