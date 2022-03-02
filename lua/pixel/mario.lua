@@ -94,6 +94,12 @@ local function init_characters()
         function c.display(opts)
             c.placement.display(opts)
         end
+        function c.destroy()
+            if c.placement then
+                c.placement.destroy()
+                c.placement = nil
+            end
+        end
         function c.update(state)
             c.state = type(state) == 'string' and state or c.state
             if c.state == 'idle' then
@@ -158,6 +164,7 @@ local function draw()
         vim.defer_fn(draw, 1000 / fps)
         if stopping and active_characters == 0 then
             started, stopping = false, false
+            exec_characters 'destroy'
         end
         terminal.end_transaction()
     end
