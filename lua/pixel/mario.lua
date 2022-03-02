@@ -97,7 +97,7 @@ local function init_characters()
         function c.destroy()
             if c.placement then
                 c.placement.destroy()
-                c.placement = nil
+                c = nil
             end
         end
         function c.update(state)
@@ -165,6 +165,7 @@ local function draw()
         if stopping and active_characters == 0 then
             started, stopping = false, false
             exec_characters 'destroy'
+            img:destroy()
         end
         terminal.end_transaction()
     end
