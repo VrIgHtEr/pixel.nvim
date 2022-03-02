@@ -1,4 +1,5 @@
 local mario = {}
+math.randomseed(os.time())
 local image, terminal = require 'pixel.render.image', require 'pixel.render.terminal'
 
 local sprite_w, sprite_h = 32, 32
@@ -20,24 +21,22 @@ do
             xpos = 0,
             xinc = 0,
             dir = math.random(0, 1) == 0,
-            sprite_x_dir = 1,
             sprite_x = 0,
-            frame_change_counter = 0,
-            frame_change_max = 4,
             num_frames = num_frames,
+            speed = 1,
+            sprite_sheet_strip_index = (i - 1) * 2 * sprite_h,
+            anim_divisor = 3,
+            hide = function()
+                c.placement.hide()
+            end,
             update = function()
                 if c.state == 'animating' then
                     c.xpos = c.xpos + c.xinc
-                    c.frame_change_counter = c.frame_change_counter + 1
-                    if c.frame_change_counter == c.frame_change_max then
-                        c.frame_change_counter = 0
-                        if c.sprite_x == 0 then
-                            c.sprite_x_dir = 1
-                        elseif c.sprite_x == (c.num_frames - 1) then
-                            c.sprite_x_dir = -1
-                        end
-                        c.sprite_x = c.sprite_x + c.sprite_x_dir
+                    c.sprite_x = math.floor((c.frame_counter / c.anim_divisor * c.speed) % (c.num_frames > 1 and c.num_frames - 2 + c.num_frames or 1))
+                    if c.sprite_x >= c.num_frames then
+                        c.sprite_x = num_frames - 1 + num_frames - c.sprite_x
                     end
+                    c.frame_counter = c.frame_counter + 1
                     c.placement.display {
                         pos = {
                             x = math.floor(c.xpos),
@@ -46,7 +45,7 @@ do
                         z = c.z,
                         crop = {
                             x = c.sprite_x * sprite_w,
-                            y = ((c.p - 1) * 2 + (c.dir and 0 or 1)) * sprite_h,
+                            y = c.sprite_sheet_strip_index + (c.dir and 0 or 1) * sprite_h,
                             w = sprite_w,
                             h = sprite_h,
                         },
@@ -63,6 +62,7 @@ do
                     c.dir = not c.dir
                     c.xinc = c.dir and 1 or -1
                     c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
+                    c.frame_counter = 0
                 elseif c.state == 'waiting' then
                     c.counter = c.counter - 1
                     if c.counter == 0 then
@@ -78,23 +78,23 @@ end
 local started = false
 local stopping = false
 
+local function exec(key)
+    for _, c in ipairs(characters) do
+        c[key]()
+    end
+end
+
 local function draw()
     if started then
+        terminal.begin_transaction()
         if stopping then
-            terminal.begin_transaction()
-            for _, c in ipairs(characters) do
-                c.placement.hide()
-            end
-            terminal.end_transaction()
+            exec 'hide'
             started, stopping = false, false
         else
-            terminal.begin_transaction()
-            for _, c in ipairs(characters) do
-                c.update()
-            end
-            terminal.end_transaction()
+            exec 'update'
             vim.defer_fn(draw, 1000 / fps)
         end
+        terminal.end_transaction()
     end
 end
 
