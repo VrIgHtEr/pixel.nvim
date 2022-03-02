@@ -31,7 +31,7 @@ do
             sprite_sheet_strip_col_index = 0,
             num_frames = num_frames - ((i == 3 or i == 4) and 1 or 0),
             sprite_sheet_strip_index = (i - 1) * 2 * sprite_h,
-            anim_divisor = 3,
+            anim_divisor = 3 + ((i == 3 or i == 4) and 2 or 0),
             hide = function()
                 c.placement.hide()
             end,
