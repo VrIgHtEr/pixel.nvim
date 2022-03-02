@@ -83,7 +83,7 @@ local function init_characters()
         c.state = 'idle'
         c.xpos = 0
         c.xinc = 0
-        c.dir = math.random(0, 1) == 0
+        c.dir = c.dir == nil and math.random(0, 1) == 0 or c.dir
         c.sprite_sheet_strip_col_index = 0
         c.num_frames = num_frames - ((i == 3 or i == 4) and 1 or 0)
         c.sprite_sheet_strip_index = (i - 1) * 2 * sprite_h
