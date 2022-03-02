@@ -7,7 +7,7 @@ local fps = 25
 
 local characters = {}
 
-local function exec(key)
+local function exec_characters(key)
     for _, c in ipairs(characters) do
         c[key]()
     end
@@ -69,11 +69,11 @@ do
                 elseif c.state == 'idle' then
                     c.hide()
                     c.state = 'waiting'
-                    c.counter = math.random(25, 25 * 78)
+                    c.counter = math.random(25, 25 * 11)
                     c.dir = not c.dir
                     c.xinc = c.dir and 1 or -1
                     c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
-                    c.speed = math.random() * 2 + 1
+                    c.speed = math.random() * 7 + 1
                     c.frame_counter = 0
                 elseif c.state == 'waiting' then
                     c.counter = c.counter - 1
@@ -94,10 +94,10 @@ local function draw()
     if started then
         terminal.begin_transaction()
         if stopping then
-            exec 'hide'
+            exec_characters 'hide'
             started, stopping = false, false
         else
-            exec 'update'
+            exec_characters 'update'
             vim.defer_fn(draw, 1000 / fps)
         end
         terminal.end_transaction()
