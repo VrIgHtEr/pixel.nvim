@@ -69,7 +69,7 @@ do
                 elseif c.state == 'idle' then
                     c.hide()
                     c.state = 'waiting'
-                    c.counter = math.random(25, 25 * 156)
+                    c.counter = math.random(25, 25 * 78)
                     c.dir = not c.dir
                     c.xinc = c.dir and 1 or -1
                     c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
