@@ -4,13 +4,8 @@ local image, terminal = require 'pixel.render.image', require 'pixel.render.term
 
 local sprite_w, sprite_h = 32, 32
 local fps = 25
-
-local runtime_files = vim.api.nvim_get_runtime_file('data', true)
+local started, stopping = false, false
 local img
-table.sort(runtime_files)
-for _, x in ipairs(runtime_files) do
-    --print(x)
-end
 
 local characters
 
@@ -153,9 +148,6 @@ local function init_characters()
         end
     end
 end
-
-local started = false
-local stopping = false
 
 local function draw()
     if started then
