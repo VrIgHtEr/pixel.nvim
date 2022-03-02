@@ -73,7 +73,11 @@ do
                     c.dir = not c.dir
                     c.xinc = c.dir and 1 or -1
                     c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
-                    c.speed = math.random() * 7 + 1
+                    local maxspeed, minspeed = c.num_frames - 1 + c.num_frames, 1
+                    c.speed = math.random() * (maxspeed - minspeed) + minspeed
+                    if c.speed == 0 then
+                        c.speed = 1
+                    end
                     c.frame_counter = 0
                 elseif c.state == 'waiting' then
                     c.counter = c.counter - 1
