@@ -28,7 +28,7 @@ do
             xpos = 0,
             xinc = 0,
             dir = math.random(0, 1) == 0,
-            sprite_x = 0,
+            sprite_sheet_strip_col_index = 0,
             num_frames = num_frames,
             sprite_sheet_strip_index = (i - 1) * 2 * sprite_h,
             anim_divisor = 3,
@@ -44,9 +44,11 @@ do
                 end
                 if c.state == 'animating' then
                     c.xpos = c.xpos + c.xinc * c.speed
-                    c.sprite_x = math.floor((c.frame_counter / c.anim_divisor * c.speed) % (c.num_frames > 1 and c.num_frames - 2 + c.num_frames or 1))
-                    if c.sprite_x >= c.num_frames then
-                        c.sprite_x = num_frames - 1 + num_frames - c.sprite_x
+                    c.sprite_sheet_strip_col_index = math.floor(
+                        (c.frame_counter / c.anim_divisor * c.speed) % (c.num_frames > 1 and c.num_frames - 2 + c.num_frames or 1)
+                    )
+                    if c.sprite_sheet_strip_col_index >= c.num_frames then
+                        c.sprite_sheet_strip_col_index = num_frames - 1 + num_frames - c.sprite_sheet_strip_col_index
                     end
                     c.frame_counter = c.frame_counter + 1
                     c.display {
@@ -55,7 +57,7 @@ do
                             y = math.floor((image.rows - 2) * image.cell_h - 1),
                         },
                         crop = {
-                            x = c.sprite_x * sprite_w,
+                            x = c.sprite_sheet_strip_col_index * sprite_w,
                             y = c.sprite_sheet_strip_index + (c.dir and 0 or sprite_h),
                             w = sprite_w,
                             h = sprite_h,
