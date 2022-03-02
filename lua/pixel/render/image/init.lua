@@ -196,6 +196,7 @@ function image:hide(p)
 end
 
 function image:create_placement()
+    local s = self
     local placement_id
     local active = true
     local hidden = true
@@ -214,14 +215,14 @@ function image:create_placement()
     function placement.display(opts)
         if active then
             opts.placement = placement_id
-            self:display(opts)
+            s:display(opts)
             hidden = false
         end
     end
     function placement.hide()
         if active then
             if not hidden then
-                self:hide(placement_id)
+                s:hide(placement_id)
                 hidden = true
             end
         end
