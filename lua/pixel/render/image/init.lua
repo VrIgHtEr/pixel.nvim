@@ -3,7 +3,8 @@ local stdin = vim.loop.new_tty(0, true)
 local util = require 'pixel.util'
 local kitty = require 'pixel.render.engine.kitty'
 
-local img_id = 0
+local last_image_id = 0
+local image_ids = {}
 
 local MT = {
     __index = image,
@@ -14,6 +15,8 @@ local format = { rgb = 24, argb = 32, png = 100 }
 
 local defaults = {
     format = format.png,
+    auto_reclaim = true,
+    active = true,
 }
 
 local terminal = require 'pixel.render.terminal'
@@ -24,12 +27,20 @@ function image.new(opts)
     if not opts.src then
         error 'src not provided'
     end
-    img_id = img_id + 1
+    local id
+    if #image_ids > 0 then
+        id = table.remove(image_ids)
+    else
+        last_image_id = last_image_id + 1
+        id = last_image_id
+    end
     return setmetatable({
-        id = img_id,
+        id = id,
         placements = {},
         placement_ids = {},
         last_placement_id = 0,
+        active = true,
+        auto_reclaim = opts.auto_reclaim,
         src = opts.src,
     }, MT)
 end
@@ -187,19 +198,20 @@ function image:display(opts)
     return true
 end
 
-function image:hide(p)
-    local cmd = { a = 'd', d = 'i', i = self.id }
-    if type(p) == 'number' then
-        cmd.p = p
+function image:hide()
+    kitty.send_cmd { a = 'd', d = 'i', i = self.id }
+end
+
+function image:destroy()
+    if self.active then
+        self:hide()
+        table.insert(image_ids, self.id)
+        self.active = false
     end
-    kitty.send_cmd(cmd)
 end
 
 function image:create_placement()
-    local s = self
-    local placement_id
-    local active = true
-    local hidden = true
+    local active, hidden, placement_id = true, true, nil
     if #self.placement_ids > 0 then
         placement_id = table.remove(self.placement_ids)
     else
@@ -213,27 +225,30 @@ function image:create_placement()
     end
     local placement = {}
     function placement.display(opts)
-        if active then
+        if active and self.active then
             opts.placement = placement_id
-            s:display(opts)
+            self:display(opts)
             hidden = false
         end
     end
     function placement.hide()
-        if active then
+        if active and self.active then
             if not hidden then
-                s:hide(placement_id)
+                kitty.send_cmd { a = 'd', d = 'i', i = self.id, p = placement_id }
                 hidden = true
             end
         end
     end
     function placement.destroy()
-        if active then
+        if active and self.active then
             placement.hide()
             self.placements[placement_id] = self.placements[placement_id] - 1
             if self.placements[placement_id] == 0 then
                 self.placements[placement_id] = nil
                 table.insert(self.placement_ids, placement_id)
+                if self.auto_reclaim and #self.placement_ids == self.last_placement_id then
+                    self:destroy()
+                end
             end
             active = false
         end
