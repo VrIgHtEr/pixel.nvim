@@ -54,7 +54,7 @@ do
                     c.display {
                         pos = {
                             x = math.floor(c.xpos),
-                            y = math.floor((image.rows - 2) * image.cell_h - 1),
+                            y = math.floor(image.rows * image.cell_h - 1),
                         },
                         crop = {
                             x = c.sprite_sheet_strip_col_index * sprite_w,
