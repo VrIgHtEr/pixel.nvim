@@ -46,14 +46,16 @@ function image.new(opts)
 end
 
 function image:transmit()
-    local data = util.read_file(self.src)
-    kitty.send_cmd({
-        a = 't',
-        t = 'd',
-        f = 100,
-        i = self.id,
-        q = 2,
-    }, data)
+    if self.active then
+        local data = util.read_file(self.src)
+        kitty.send_cmd({
+            a = 't',
+            t = 'd',
+            f = 100,
+            i = self.id,
+            q = 2,
+        }, data)
+    end
 end
 
 local function validate_opts(self, opts)
@@ -147,59 +149,63 @@ local function validate_opts(self, opts)
 end
 
 function image:display(opts)
-    local cmd = { a = 'p', i = self.id, C = 1, q = 2 }
-    do
-        local e
-        opts, e = validate_opts(self, opts)
-        if not opts then
-            return nil, e
+    if self.active then
+        local cmd = { a = 'p', i = self.id, C = 1, q = 2 }
+        do
+            local e
+            opts, e = validate_opts(self, opts)
+            if not opts then
+                return nil, e
+            end
         end
-    end
-    if opts.crop.w == 0 or opts.crop.h == 0 then
-        return true
-    end
-
-    local top = opts.anchor > 1 and (opts.pos.y - opts.crop.h + 1) or opts.pos.y
-    local left = (opts.anchor == 1 or opts.anchor == 2) and (opts.pos.x - opts.crop.w + 1) or opts.pos.x
-    local bottom, right = top + opts.crop.w, left + opts.crop.h
-
-    if left < 0 then
-        if -left >= opts.crop.w then
+        if opts.crop.w == 0 or opts.crop.h == 0 then
             return true
         end
-        opts.crop.x, opts.crop.w, left = opts.crop.x - left, opts.crop.w + left, 0
-    elseif left >= image.win_w or right <= 0 then
-        return true
-    end
-    if top < 0 then
-        if -top >= opts.crop.h then
+
+        local top = opts.anchor > 1 and (opts.pos.y - opts.crop.h + 1) or opts.pos.y
+        local left = (opts.anchor == 1 or opts.anchor == 2) and (opts.pos.x - opts.crop.w + 1) or opts.pos.x
+        local bottom, right = top + opts.crop.w, left + opts.crop.h
+
+        if left < 0 then
+            if -left >= opts.crop.w then
+                return true
+            end
+            opts.crop.x, opts.crop.w, left = opts.crop.x - left, opts.crop.w + left, 0
+        elseif left >= image.win_w or right <= 0 then
             return true
         end
-        opts.crop.y, opts.crop.h, top = opts.crop.y - top, opts.crop.h + top, 0
-    elseif top >= image.win_h or bottom <= 0 then
+        if top < 0 then
+            if -top >= opts.crop.h then
+                return true
+            end
+            opts.crop.y, opts.crop.h, top = opts.crop.y - top, opts.crop.h + top, 0
+        elseif top >= image.win_h or bottom <= 0 then
+            return true
+        end
+
+        if bottom > image.win_h then
+            opts.crop.h = opts.crop.h - (bottom - image.win_h)
+        end
+        if right > image.win_w then
+            opts.crop.w = opts.crop.w - (right - image.win_w)
+        end
+
+        local xcell, ycell = math.floor(left / image.cell_w), math.floor(top / image.cell_h)
+        cmd.X, cmd.Y = left % image.cell_w, top % image.cell_h
+        cmd.x, cmd.y, cmd.w, cmd.h = opts.crop.x, opts.crop.y, opts.crop.w, opts.crop.h
+        cmd.p = opts.placement
+        cmd.z = opts.z
+        terminal.execute_at(ycell + 1, xcell + 1, function()
+            kitty.send_cmd(cmd)
+        end)
         return true
     end
-
-    if bottom > image.win_h then
-        opts.crop.h = opts.crop.h - (bottom - image.win_h)
-    end
-    if right > image.win_w then
-        opts.crop.w = opts.crop.w - (right - image.win_w)
-    end
-
-    local xcell, ycell = math.floor(left / image.cell_w), math.floor(top / image.cell_h)
-    cmd.X, cmd.Y = left % image.cell_w, top % image.cell_h
-    cmd.x, cmd.y, cmd.w, cmd.h = opts.crop.x, opts.crop.y, opts.crop.w, opts.crop.h
-    cmd.p = opts.placement
-    cmd.z = opts.z
-    terminal.execute_at(ycell + 1, xcell + 1, function()
-        kitty.send_cmd(cmd)
-    end)
-    return true
 end
 
 function image:hide()
-    kitty.send_cmd { a = 'd', d = 'i', i = self.id }
+    if self.active then
+        kitty.send_cmd { a = 'd', d = 'i', i = self.id }
+    end
 end
 
 function image:destroy()
@@ -211,49 +217,51 @@ function image:destroy()
 end
 
 function image:create_placement()
-    local active, hidden, placement_id = true, true, nil
-    if #self.placement_ids > 0 then
-        placement_id = table.remove(self.placement_ids)
-    else
-        self.last_placement_id = self.last_placement_id + 1
-        placement_id = self.last_placement_id
-    end
-    if not self.placements[placement_id] then
-        self.placements[placement_id] = 1
-    else
-        self.placements[placement_id] = self.placements[placement_id] + 1
-    end
-    local placement = {}
-    function placement.display(opts)
-        if active and self.active then
-            opts.placement = placement_id
-            self:display(opts)
-            hidden = false
+    if self.active then
+        local active, hidden, placement_id = true, true, nil
+        if #self.placement_ids > 0 then
+            placement_id = table.remove(self.placement_ids)
+        else
+            self.last_placement_id = self.last_placement_id + 1
+            placement_id = self.last_placement_id
         end
-    end
-    function placement.hide()
-        if active and self.active then
-            if not hidden then
-                kitty.send_cmd { a = 'd', d = 'i', i = self.id, p = placement_id }
-                hidden = true
+        if not self.placements[placement_id] then
+            self.placements[placement_id] = 1
+        else
+            self.placements[placement_id] = self.placements[placement_id] + 1
+        end
+        local placement = {}
+        function placement.display(opts)
+            if active and self.active then
+                opts.placement = placement_id
+                self:display(opts)
+                hidden = false
             end
         end
-    end
-    function placement.destroy()
-        if active and self.active then
-            placement.hide()
-            self.placements[placement_id] = self.placements[placement_id] - 1
-            if self.placements[placement_id] == 0 then
-                self.placements[placement_id] = nil
-                table.insert(self.placement_ids, placement_id)
-                if self.auto_reclaim and #self.placement_ids == self.last_placement_id then
-                    self:destroy()
+        function placement.hide()
+            if active and self.active then
+                if not hidden then
+                    kitty.send_cmd { a = 'd', d = 'i', i = self.id, p = placement_id }
+                    hidden = true
                 end
             end
-            active = false
         end
+        function placement.destroy()
+            if active and self.active then
+                placement.hide()
+                self.placements[placement_id] = self.placements[placement_id] - 1
+                if self.placements[placement_id] == 0 then
+                    self.placements[placement_id] = nil
+                    table.insert(self.placement_ids, placement_id)
+                    if self.auto_reclaim and #self.placement_ids == self.last_placement_id then
+                        self:destroy()
+                    end
+                end
+                active = false
+            end
+        end
+        return placement
     end
-    return placement
 end
 
 function image.discover_win_size(cb)
