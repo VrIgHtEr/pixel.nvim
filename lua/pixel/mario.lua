@@ -5,9 +5,7 @@ local image, terminal = require 'pixel.render.image', require 'pixel.render.term
 local sprite_w, sprite_h = 32, 32
 local fps = 25
 local started, stopping = false, false
-local img
-
-local characters
+local img, characters
 
 local function exec_characters(key)
     for _, c in ipairs(characters) do
