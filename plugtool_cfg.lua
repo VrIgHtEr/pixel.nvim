@@ -8,6 +8,5 @@ return {
         local mul = 6
         pixel.setup { rows = 9 * mul + bit.band(mul, 1), cols = 16 * mul, framerate = 25 }
         pixel.set_animation(require 'pixel.animations.cycle')
-        require('pixel.mario').wahooo()
     end,
 }
