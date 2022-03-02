@@ -9,7 +9,7 @@ local runtime_files = vim.api.nvim_get_runtime_file('data', true)
 local img
 table.sort(runtime_files)
 for _, x in ipairs(runtime_files) do
-    print(x)
+    --print(x)
 end
 
 local characters
