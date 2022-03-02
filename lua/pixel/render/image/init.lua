@@ -188,10 +188,11 @@ function image:display(opts)
 end
 
 function image:hide(p)
-    if type(p) ~= 'number' then
-        p = 0
+    local cmd = { a = 'd', i = self.id }
+    if type(p) == 'number' then
+        cmd.p = p
     end
-    kitty.send_cmd { a = 'd', i = self.id, p = p }
+    kitty.send_cmd(cmd)
 end
 
 function image:create_placement()
