@@ -188,7 +188,7 @@ function image:display(opts)
 end
 
 function image:hide(p)
-    local cmd = { a = 'd', i = self.id }
+    local cmd = { a = 'd', d = 'i', i = self.id }
     if type(p) == 'number' then
         cmd.p = p
     end
