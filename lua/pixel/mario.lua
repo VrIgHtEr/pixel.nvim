@@ -12,64 +12,65 @@ local function exec_characters(key)
     end
 end
 
+characters = {
+    {
+        anim = {
+            x = 0,
+            y = 0,
+            w = 32,
+            h = 32,
+            frames = 3,
+            stride_x = 32,
+            stride_y = 32,
+        },
+    },
+    {
+        anim = {
+            x = 0,
+            y = 64,
+            w = 32,
+            h = 32,
+            frames = 3,
+            stride_x = 32,
+            stride_y = 32,
+        },
+    },
+    {
+        anim = {
+            x = 0,
+            y = 128,
+            w = 32,
+            h = 32,
+            frames = 2,
+            stride_x = 32,
+            stride_y = 32,
+        },
+    },
+    {
+        anim = {
+            x = 0,
+            y = 192,
+            w = 32,
+            h = 32,
+            frames = 2,
+            stride_x = 32,
+            stride_y = 32,
+        },
+    },
+    {
+        anim = {
+            x = 0,
+            y = 256,
+            w = 32,
+            h = 32,
+            frames = 3,
+            stride_x = 32,
+            stride_y = 32,
+        },
+    },
+}
+
 local function init_characters()
-    characters = {
-        {
-            anim = {
-                x = 0,
-                y = 0,
-                w = 32,
-                h = 32,
-                frames = 3,
-                stride_x = 32,
-                stride_y = 32,
-            },
-        },
-        {
-            anim = {
-                x = 0,
-                y = 64,
-                w = 32,
-                h = 32,
-                frames = 3,
-                stride_x = 32,
-                stride_y = 32,
-            },
-        },
-        {
-            anim = {
-                x = 0,
-                y = 128,
-                w = 32,
-                h = 32,
-                frames = 2,
-                stride_x = 32,
-                stride_y = 32,
-            },
-        },
-        {
-            anim = {
-                x = 0,
-                y = 192,
-                w = 32,
-                h = 32,
-                frames = 2,
-                stride_x = 32,
-                stride_y = 32,
-            },
-        },
-        {
-            anim = {
-                x = 0,
-                y = 256,
-                w = 32,
-                h = 32,
-                frames = 3,
-                stride_x = 32,
-                stride_y = 32,
-            },
-        },
-    }
     img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
     img.size = { x = 96, y = 320 }
     img:transmit()
