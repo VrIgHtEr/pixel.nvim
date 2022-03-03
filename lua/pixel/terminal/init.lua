@@ -78,7 +78,7 @@ function terminal.write(...)
     end
 end
 
-local ansi = require 'pixel.render.terminal.ansi'
+local ansi = require 'pixel.terminal.ansi'
 function terminal.execute_at(row, col, func, ...)
     terminal.begin_transaction()
     write(ansi.save_cursor())

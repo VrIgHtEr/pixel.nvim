@@ -1,6 +1,6 @@
 local kitty = {}
 local string = require 'toolshed.util.string'
-local terminal = require 'pixel.render.terminal'
+local terminal = require 'pixel.terminal'
 local util = require 'pixel.util'
 
 kitty.constants = {

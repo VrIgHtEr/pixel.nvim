@@ -14,7 +14,7 @@ local sector_t = {}
 --
 
 local color = require 'pixel.color'
-local line = require 'pixel.util.geometry.line'
+local line = require 'pixel.p3d.line'
 local complex = require 'pixel.util.math.complex'
 local math = require 'pixel.util.math'
 

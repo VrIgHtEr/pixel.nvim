@@ -7,10 +7,5 @@ function M.round(x)
     end
 end
 
-setmetatable(M, {
-    __index = function(_, key)
-        return math[key]
-    end,
-})
-
+setmetatable(M, { __index = math, __metatable = function() end })
 return M

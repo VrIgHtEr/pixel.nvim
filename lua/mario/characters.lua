@@ -1,5 +1,5 @@
 local M
-local image = require 'pixel.render.image'
+local image = require 'pixel.image'
 local img
 
 M = {

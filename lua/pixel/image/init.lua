@@ -1,7 +1,6 @@
 local image = {}
+local util, terminal, kitty = require 'pixel.util', require 'pixel.terminal', require 'pixel.terminal.kitty'
 local stdin = vim.loop.new_tty(0, true)
-local util = require 'pixel.util'
-local kitty = require 'pixel.render.engine.kitty'
 
 local last_image_id = 0
 local image_ids = {}
@@ -18,8 +17,6 @@ local defaults = {
     auto_reclaim = true,
     active = true,
 }
-
-local terminal = require 'pixel.render.terminal'
 
 function image.new(opts)
     opts = opts == nil and {} or opts

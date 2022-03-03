@@ -1,5 +1,5 @@
 local mario = {}
-local image, terminal, chars = require 'pixel.render.image', require 'pixel.render.terminal', require 'mario.characters'
+local image, terminal, chars = require 'pixel.image', require 'pixel.terminal', require 'mario.characters'
 
 local fps = 25
 local started, stopping, active_characters = false, false, 0
