@@ -4,11 +4,11 @@ local img
 
 M = {
     data = {
-        { anim = { x = 0, y = 0, w = 32, h = 32, frames = 3, stride_x = 32, stride_y = 32, speed = 3 } },
-        { anim = { x = 0, y = 64, w = 32, h = 32, frames = 3, stride_x = 32, stride_y = 32, speed = 3 } },
-        { anim = { x = 0, y = 128, w = 32, h = 32, frames = 2, stride_x = 32, stride_y = 32, speed = 5 } },
-        { anim = { x = 0, y = 192, w = 32, h = 32, frames = 2, stride_x = 32, stride_y = 32, speed = 5 } },
-        { anim = { x = 0, y = 256, w = 32, h = 32, frames = 3, stride_x = 32, stride_y = 32, speed = 3 } },
+        { anim = { x = 0, y = 0, w = 32, h = 32, frames = 3, stride_x = 32, stride_y = 32, speed = 3, z = nil } },
+        { anim = { x = 0, y = 64, w = 32, h = 32, frames = 3, stride_x = 32, stride_y = 32, speed = 3, z = nil } },
+        { anim = { x = 0, y = 128, w = 32, h = 32, frames = 2, stride_x = 32, stride_y = 32, speed = 5, z = nil } },
+        { anim = { x = 0, y = 192, w = 32, h = 32, frames = 2, stride_x = 32, stride_y = 32, speed = 5, z = nil } },
+        { anim = { x = 0, y = 256, w = 32, h = 32, frames = 3, stride_x = 32, stride_y = 32, speed = 3, z = nil } },
     },
     exec = function(key)
         for _, c in ipairs(M.data) do
