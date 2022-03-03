@@ -81,9 +81,6 @@ local function init_characters()
         c.p = i
         c.placement = img:create_placement()
         c.state = 'idle'
-        c.xpos = 0
-        c.xinc = 0
-        c.dir = c.dir == nil and math.random(0, 1) == 0 or c.dir
         c.sprite_sheet_strip_col_index = 0
         c.num_frames = num_frames - ((i == 3 or i == 4) and 1 or 0)
         c.sprite_sheet_strip_index = (i - 1) * 2 * sprite_h
@@ -108,9 +105,8 @@ local function init_characters()
                 end
                 c.state = 'waiting'
                 c.counter = math.random(25, 25 * 11)
-                c.dir = not c.dir
-                c.xinc = c.dir and 1 or -1
-                c.xpos = c.dir and -sprite_w or (image.win_w + sprite_w)
+                c.dir = c.dir == nil and math.random(0, 1) == 0 or not c.dir
+                c.xinc, c.xpos = c.dir and 1 or -1, c.dir and -sprite_w or (image.win_w + sprite_w)
                 local maxspeed, minspeed = c.num_frames - 1 + c.num_frames, 1
                 c.speed = math.max(minspeed, math.random() * (maxspeed - minspeed) + minspeed)
                 c.frame_counter = 0
@@ -174,13 +170,15 @@ end
 
 function mario.lets_a_gooo()
     if not started and not stopping then
-        started = true
-        stopping = false
-        init_characters()
-        image.discover_win_size(vim.schedule_wrap(function()
-            init_characters()
-            draw()
-        end))
+        local term = vim.fn.getenv 'TERM'
+        if term == 'xterm-kitty' or term == 'wezterm' then
+            started = true
+            stopping = false
+            image.discover_win_size(vim.schedule_wrap(function()
+                init_characters()
+                draw()
+            end))
+        end
     end
 end
 
@@ -196,13 +194,6 @@ function mario.its_a_meee()
             mario.oh_nooo()
         end
     else
-        mario.lets_a_gooo()
-    end
-end
-
-function mario.wahooo()
-    local term = vim.fn.getenv 'TERM'
-    if term == 'xterm-kitty' or term == 'wezterm' then
         mario.lets_a_gooo()
     end
 end
