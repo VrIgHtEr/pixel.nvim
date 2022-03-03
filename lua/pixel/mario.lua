@@ -2,7 +2,6 @@ local mario = {}
 math.randomseed(os.time())
 local image, terminal = require 'pixel.render.image', require 'pixel.render.terminal'
 
-local sprite_w, sprite_h = 32, 32
 local fps = 25
 local started, stopping, active_characters = false, false, 0
 local img, characters
@@ -19,71 +18,68 @@ local function init_characters()
             anim = {
                 x = 0,
                 y = 0,
-                w = sprite_w,
-                h = sprite_h,
+                w = 32,
+                h = 32,
                 frames = 3,
-                stride_x = sprite_w,
-                stride_y = sprite_h,
+                stride_x = 32,
+                stride_y = 32,
             },
         },
         {
             anim = {
                 x = 0,
                 y = 64,
-                w = sprite_w,
-                h = sprite_h,
+                w = 32,
+                h = 32,
                 frames = 3,
-                stride_x = sprite_w,
-                stride_y = sprite_h,
+                stride_x = 32,
+                stride_y = 32,
             },
         },
         {
             anim = {
                 x = 0,
                 y = 128,
-                w = sprite_w,
-                h = sprite_h,
+                w = 32,
+                h = 32,
                 frames = 2,
-                stride_x = sprite_w,
-                stride_y = sprite_h,
+                stride_x = 32,
+                stride_y = 32,
             },
         },
         {
             anim = {
                 x = 0,
                 y = 192,
-                w = sprite_w,
-                h = sprite_h,
+                w = 32,
+                h = 32,
                 frames = 2,
-                stride_x = sprite_w,
-                stride_y = sprite_h,
+                stride_x = 32,
+                stride_y = 32,
             },
         },
         {
             anim = {
                 x = 0,
                 y = 256,
-                w = sprite_w,
-                h = sprite_h,
+                w = 32,
+                h = 32,
                 frames = 3,
-                stride_x = sprite_w,
-                stride_y = sprite_h,
+                stride_x = 32,
+                stride_y = 32,
             },
         },
     }
     img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
     img.size = { x = 96, y = 320 }
     img:transmit()
-    local num_frames = math.floor(img.size.x / sprite_w)
-    for i = 1, math.floor(img.size.y / (sprite_h * 2)) do
-        local c = characters[i]
+    for i, character in ipairs(characters) do
+        local c = character
+        c.anim = c.anim ~= nil and c.anim or { x = 0, y = 0, w = img.size.x, h = img.size.y, frames = 1, stride_x = 0, stride_y = 0 }
         c.z = -i
         c.p = i
         c.placement = img:create_placement()
         c.state = 'idle'
-        c.sprite_sheet_strip_col_index = 0
-        c.num_frames = num_frames - ((i == 3 or i == 4) and 1 or 0)
-        c.sprite_sheet_strip_index = (i - 1) * 2 * sprite_h
         c.anim_divisor = 3 + ((i == 3 or i == 4) and 2 or 0)
         function c.hide()
             c.placement.hide()
@@ -105,9 +101,9 @@ local function init_characters()
                 end
                 c.state = 'waiting'
                 c.counter = math.random(25, 25 * 11)
-                c.dir = c.dir == nil and math.random(0, 1) == 0 or not c.dir
-                c.xinc, c.xpos = c.dir and 1 or -1, c.dir and -sprite_w or (image.win_w + sprite_w)
-                local maxspeed, minspeed = c.num_frames - 1 + c.num_frames, 1
+                c.dir = c.dir == nil and (math.random(0, 1) == 0) or not c.dir
+                c.xinc, c.xpos = c.dir and 1 or -1, c.dir and -c.anim.w or (image.win_w + c.anim.w)
+                local maxspeed, minspeed = c.anim.frames - 1 + c.anim.frames, 1
                 c.speed = math.max(minspeed, math.random() * (maxspeed - minspeed) + minspeed)
                 c.frame_counter = 0
             elseif c.state == 'waiting' then
@@ -122,11 +118,9 @@ local function init_characters()
                 end
             elseif c.state == 'animating' then
                 c.xpos = c.xpos + c.xinc * c.speed
-                c.sprite_sheet_strip_col_index = math.floor(
-                    (c.frame_counter / c.anim_divisor * c.speed) % (c.num_frames > 1 and c.num_frames - 2 + c.num_frames or 1)
-                )
-                if c.sprite_sheet_strip_col_index >= c.num_frames then
-                    c.sprite_sheet_strip_col_index = num_frames - 1 + num_frames - c.sprite_sheet_strip_col_index
+                c.anim.cur_frame = math.floor((c.frame_counter / c.anim_divisor * c.speed) % (c.anim.frames > 1 and c.anim.frames - 2 + c.anim.frames or 1))
+                if c.anim.cur_frame >= c.anim.frames then
+                    c.anim.cur_frame = c.anim.frames - 1 + c.anim.frames - c.anim.cur_frame
                 end
                 c.frame_counter = c.frame_counter + 1
                 c.display {
@@ -135,10 +129,10 @@ local function init_characters()
                         y = math.floor(image.rows * image.cell_h - 1),
                     },
                     crop = {
-                        x = c.sprite_sheet_strip_col_index * sprite_w,
-                        y = c.sprite_sheet_strip_index + (c.dir and 0 or sprite_h),
-                        w = sprite_w,
-                        h = sprite_h,
+                        x = c.anim.cur_frame * c.anim.w,
+                        y = c.anim.y + (c.dir and 0 or c.anim.h),
+                        w = c.anim.w,
+                        h = c.anim.h,
                     },
                     z = c.z,
                     anchor = c.dir and 3 or 2,
