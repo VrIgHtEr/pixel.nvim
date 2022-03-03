@@ -117,9 +117,9 @@ function image.new(params)
         id = last_image_id
     end
 
-    local placements = {}
-    local placement_ids = {}
-    local last_placement_id = 0
+    local ps = {}
+    local p_ids = {}
+    local last_p_id = 0
     local active = true
     local auto_reclaim = params.auto_reclaim
 
@@ -203,18 +203,18 @@ function image.new(params)
     function i.create_placement()
         if active then
             local p_active, hidden, p_id = true, true, nil
-            if #placement_ids > 0 then
-                p_id = table.remove(placement_ids)
+            if #p_ids > 0 then
+                p_id = table.remove(p_ids)
             else
-                last_placement_id = last_placement_id + 1
-                p_id = last_placement_id
-            end
-            if not placements[p_id] then
-                placements[p_id] = 1
-            else
-                placements[p_id] = placements[p_id] + 1
+                last_p_id = last_p_id + 1
+                p_id = last_p_id
             end
             local p = {}
+            if not ps[p_id] then
+                ps[p_id] = 1
+            else
+                ps[p_id] = ps[p_id] + 1
+            end
             function p.display(opts)
                 if p_active and p_active then
                     opts.placement = p_id
@@ -233,11 +233,11 @@ function image.new(params)
             function p.destroy()
                 if p_active and p_active then
                     p.hide()
-                    placements[p_id] = placements[p_id] - 1
-                    if placements[p_id] == 0 then
-                        placements[p_id] = nil
-                        table.insert(placement_ids, p_id)
-                        if auto_reclaim and #placement_ids == last_placement_id then
+                    ps[p_id] = ps[p_id] - 1
+                    if ps[p_id] == 0 then
+                        ps[p_id] = nil
+                        table.insert(p_ids, p_id)
+                        if auto_reclaim and #p_ids == last_p_id then
                             i.destroy()
                         end
                     end
