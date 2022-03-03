@@ -1,5 +1,6 @@
 local M
 local image = require 'pixel.render.image'
+local img
 
 M = {
     data = {
@@ -69,14 +70,21 @@ M = {
             c[key]()
         end
     end,
+    destroy = function()
+        if img then
+            M.exec 'destroy'
+            img:destroy()
+            img = nil
+        end
+    end,
     init = function()
-        local img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/mario/sprites.png' }
+        img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/mario/sprites.png' }
         img.size = { x = 96, y = 320 }
         img:transmit()
         for i, character in ipairs(M.data) do
             local c = character
             c.placement = img:create_placement()
-            c.state = 'stopped'
+            c.state = 'halted'
             c.anim = c.anim ~= nil and c.anim or { x = 0, y = 0, w = img.size.x, h = img.size.y, frames = 1, stride_x = 0, stride_y = 0 }
             c.anim.z = -i
             c.hide = function()

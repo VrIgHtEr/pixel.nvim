@@ -3,7 +3,6 @@ local image, terminal, chars = require 'pixel.render.image', require 'pixel.rend
 
 local fps = 25
 local started, stopping, active_characters = false, false, 0
-local img
 
 local function init_characters()
     chars.init()
@@ -68,8 +67,7 @@ local function draw()
         chars.exec 'update'
         if stopping and active_characters == 0 then
             started, stopping = false, false
-            chars.exec 'destroy'
-            img:destroy()
+            chars.destroy()
         else
             vim.defer_fn(draw, 1000 / fps)
         end
