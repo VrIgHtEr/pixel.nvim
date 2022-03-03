@@ -9,7 +9,7 @@ local format = { rgb = 24, argb = 32, png = 100 }
 
 local defaults = {
     format = format.png,
-    auto_reclaim = true,
+    auto_reclaim = false,
     active = true,
 }
 

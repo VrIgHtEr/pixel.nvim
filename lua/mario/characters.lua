@@ -78,7 +78,7 @@ M = {
         end
     end,
     init = function()
-        img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/mario/sprites.png' }
+        img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/mario/sprites.png', auto_reclaim = true }
         img.size = { x = 96, y = 320 }
         img.transmit()
         for i, character in ipairs(M.data) do
