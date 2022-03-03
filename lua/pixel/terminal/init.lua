@@ -9,6 +9,7 @@ local ansi = require 'pixel.terminal.ansi'
 local writing = false
 local faulted, fault = false, nil
 local transaction_count = 0
+local cursor_saved = false
 
 local function commit()
     local tbl, index = {}, 0
@@ -41,8 +42,9 @@ end
 function terminal.last_error()
     return faulted, fault
 end
-function terminal.begin_transaction()
-    if transaction_count == 0 then
+function terminal.begin_transaction(dont_save_cursor)
+    if transaction_count == 0 and not dont_save_cursor then
+        cursor_saved = true
         write(ansi.save_cursor())
     end
     transaction_count = transaction_count + 1
@@ -55,7 +57,10 @@ function terminal.end_transaction()
             if queue:size() > 0 then
                 commit()
             end
-            write(ansi.restore_cursor())
+            if cursor_saved then
+                cursor_saved = false
+                write(ansi.restore_cursor())
+            end
         end
     end
 end
