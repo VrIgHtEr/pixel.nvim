@@ -87,6 +87,9 @@ M = {
             c.state = 'halted'
             c.anim = c.anim ~= nil and c.anim or { x = 0, y = 0, w = img.size.x, h = img.size.y, frames = 1, stride_x = 0, stride_y = 0 }
             c.anim.z = -i
+            if c.dir == nil then
+                c.dir = math.random(0, 1) == 0
+            end
             c.hide = function()
                 c.placement.hide()
             end
