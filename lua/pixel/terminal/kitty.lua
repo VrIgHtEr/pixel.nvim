@@ -1,7 +1,5 @@
 local kitty = {}
-local string = require 'toolshed.util.string'
-local terminal = require 'pixel.terminal'
-local util = require 'pixel.util'
+local string, terminal, util = require 'toolshed.util.string', require 'pixel.terminal', require 'pixel.util'
 
 kitty.constants = {
     control_keys = {
@@ -36,6 +34,11 @@ kitty.constants = {
     action = { query = 'q', delete = 'd', transmit = 't', transmit_and_display = 'T', put = 'p' },
     quiet = { ok = '1', errors = '2' },
 }
+
+function kitty.supported()
+    local term = vim.fn.getenv 'TERM'
+    return term == 'xterm-kitty' or term == 'wezterm'
+end
 
 local valid_keys = {}
 for _, v in pairs(kitty.constants.control_keys) do

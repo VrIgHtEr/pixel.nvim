@@ -250,13 +250,8 @@ function image.new(params)
     return i
 end
 
-function image.supported()
-    local term = vim.fn.getenv 'TERM'
-    return term == 'xterm-kitty' or term == 'wezterm'
-end
-
 function image.discover_win_size(cb)
-    if image.supported() then
+    if kitty.supported() then
         stdin:read_start(function(_, data)
             if data then
                 local len = data:len()
