@@ -123,29 +123,21 @@ function image.new(params)
     local active = true
     local auto_reclaim = params.auto_reclaim
 
-    local self = {
-        src = params.src,
-    }
+    local i = { src = params.src }
 
-    function self.transmit()
+    function i.transmit()
         if active then
-            local data = util.read_file(self.src)
-            kitty.send_cmd({
-                a = 't',
-                t = 'd',
-                f = 100,
-                i = id,
-                q = 2,
-            }, data)
+            local data = util.read_file(i.src)
+            kitty.send_cmd({ a = 't', t = 'd', f = 100, i = id, q = 2 }, data)
         end
     end
 
-    function self.display(opts)
+    function i.display(opts)
         if active then
             local cmd = { a = 'p', i = id, C = 1, q = 2 }
             do
                 local e
-                opts, e = validate_opts(self, opts)
+                opts, e = validate_opts(i, opts)
                 if not opts then
                     return nil, e
                 end
@@ -193,69 +185,69 @@ function image.new(params)
             return true
         end
     end
-    function self.hide()
+    function i.hide()
         if active then
             kitty.send_cmd { a = 'd', d = 'i', i = id }
         end
     end
 
-    function self.destroy()
+    function i.destroy()
         if active then
-            self:hide()
+            i.hide()
             table.insert(image_ids, id)
             active = false
-            self = nil
+            i = nil
         end
     end
 
-    function self.create_placement()
+    function i.create_placement()
         if active then
-            local placement_active, hidden, placement_id = true, true, nil
+            local p_active, hidden, p_id = true, true, nil
             if #placement_ids > 0 then
-                placement_id = table.remove(placement_ids)
+                p_id = table.remove(placement_ids)
             else
                 last_placement_id = last_placement_id + 1
-                placement_id = last_placement_id
+                p_id = last_placement_id
             end
-            if not placements[placement_id] then
-                placements[placement_id] = 1
+            if not placements[p_id] then
+                placements[p_id] = 1
             else
-                placements[placement_id] = placements[placement_id] + 1
+                placements[p_id] = placements[p_id] + 1
             end
-            local placement = {}
-            function placement.display(opts)
-                if placement_active and placement_active then
-                    opts.placement = placement_id
-                    self.display(opts)
+            local p = {}
+            function p.display(opts)
+                if p_active and p_active then
+                    opts.placement = p_id
+                    i.display(opts)
                     hidden = false
                 end
             end
-            function placement.hide()
-                if placement_active and placement_active then
+            function p.hide()
+                if p_active and p_active then
                     if not hidden then
-                        kitty.send_cmd { a = 'd', d = 'i', i = id, p = placement_id }
+                        kitty.send_cmd { a = 'd', d = 'i', i = id, p = p_id }
                         hidden = true
                     end
                 end
             end
-            function placement.destroy()
-                if placement_active and placement_active then
-                    placement.hide()
-                    placements[placement_id] = placements[placement_id] - 1
-                    if placements[placement_id] == 0 then
-                        placements[placement_id] = nil
-                        table.insert(placement_ids, placement_id)
+            function p.destroy()
+                if p_active and p_active then
+                    p.hide()
+                    placements[p_id] = placements[p_id] - 1
+                    if placements[p_id] == 0 then
+                        placements[p_id] = nil
+                        table.insert(placement_ids, p_id)
                         if auto_reclaim and #placement_ids == last_placement_id then
-                            self:destroy()
+                            i.destroy()
                         end
                     end
-                    placement_active = false
+                    p_active = false
                 end
             end
-            return placement
+            return p
         end
     end
-    return self
+    return i
 end
 
 function image.supported()
@@ -264,7 +256,7 @@ function image.supported()
 end
 
 function image.discover_win_size(cb)
-    if image.supported() and stdin then
+    if image.supported() then
         stdin:read_start(function(_, data)
             if data then
                 local len = data:len()
