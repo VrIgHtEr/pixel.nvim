@@ -102,7 +102,11 @@ local function init_characters()
                 end
                 c.state = 'waiting'
                 c.counter = math.random(25, 25 * 11)
-                c.dir = c.dir == nil and (math.random(0, 1) == 0) or not c.dir
+                if c.dir == nil then
+                    c.dir = math.random(0, 1) == 0
+                else
+                    c.dir = not c.dir
+                end
                 c.xinc, c.xpos = c.dir and 1 or -1, c.dir and -c.anim.w or (image.win_w + c.anim.w)
                 local maxspeed, minspeed = c.anim.frames - 1 + c.anim.frames, 1
                 c.speed = math.max(minspeed, math.random() * (maxspeed - minspeed) + minspeed)
