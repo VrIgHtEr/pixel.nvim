@@ -79,14 +79,11 @@ function mario.lets_a_gooo()
     if stopping then
         stopping = false
     elseif not started then
-        local term = vim.fn.getenv 'TERM'
-        if term == 'xterm-kitty' or term == 'wezterm' then
-            started = true
-            image.discover_win_size(vim.schedule_wrap(function()
-                init_characters()
-                draw()
-            end))
-        end
+        started = true
+        image.discover_win_size(vim.schedule_wrap(function()
+            init_characters()
+            draw()
+        end))
     end
 end
 
