@@ -161,11 +161,12 @@ local function draw()
     if started then
         terminal.begin_transaction()
         exec_characters 'update'
-        vim.defer_fn(draw, 1000 / fps)
         if stopping and active_characters == 0 then
             started, stopping = false, false
             exec_characters 'destroy'
             img:destroy()
+        else
+            vim.defer_fn(draw, 1000 / fps)
         end
         terminal.end_transaction()
     end
@@ -176,7 +177,10 @@ function mario.lets_a_gooo()
         started = true
         stopping = false
         init_characters()
-        image.discover_win_size(vim.schedule_wrap(draw))
+        image.discover_win_size(vim.schedule_wrap(function()
+            init_characters()
+            draw()
+        end))
     end
 end
 
