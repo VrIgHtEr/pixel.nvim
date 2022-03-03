@@ -82,8 +82,7 @@ local function init_characters()
     for i, character in ipairs(characters) do
         local c = character
         c.anim = c.anim ~= nil and c.anim or { x = 0, y = 0, w = img.size.x, h = img.size.y, frames = 1, stride_x = 0, stride_y = 0 }
-        c.z = -i
-        c.p = i
+        c.anim.z = -i
         c.placement = img:create_placement()
         c.state = 'idle'
         function c.hide()
@@ -133,17 +132,9 @@ local function init_characters()
                 end
                 c.frame_counter = c.frame_counter + 1
                 c.display {
-                    pos = {
-                        x = math.floor(c.xpos),
-                        y = math.floor(image.rows * image.cell_h - 1),
-                    },
-                    crop = {
-                        x = c.anim.cur_frame * c.anim.w,
-                        y = c.anim.y + (c.dir and 0 or c.anim.h),
-                        w = c.anim.w,
-                        h = c.anim.h,
-                    },
-                    z = c.z,
+                    pos = { x = math.floor(c.xpos), y = math.floor(image.rows * image.cell_h - 1) },
+                    crop = { x = c.anim.cur_frame * c.anim.w, y = c.anim.y + (c.dir and 0 or c.anim.h), w = c.anim.w, h = c.anim.h },
+                    z = c.anim.z,
                     anchor = c.dir and 3 or 2,
                 }
                 if (not c.dir or c.xpos >= image.win_w) and (c.dir or c.xpos < 0) then
@@ -151,8 +142,17 @@ local function init_characters()
                     active_characters = active_characters - 1
                     return c.update 'idle'
                 end
+            elseif c.state == 'halted' then
+                if not stopping then
+                    return c.update 'idle'
+                end
             end
         end
+    end
+
+    for i = #characters, 2, -1 do
+        local j = math.random(1, i)
+        characters[i].anim.z, characters[j].anim.z = characters[j].anim.z, characters[i].anim.z
     end
 end
 
@@ -172,11 +172,12 @@ local function draw()
 end
 
 function mario.lets_a_gooo()
-    if not started and not stopping then
+    if stopping then
+        stopping = false
+    elseif not started then
         local term = vim.fn.getenv 'TERM'
         if term == 'xterm-kitty' or term == 'wezterm' then
             started = true
-            stopping = false
             image.discover_win_size(vim.schedule_wrap(function()
                 init_characters()
                 draw()
@@ -191,14 +192,8 @@ function mario.oh_nooo()
     end
 end
 
-function mario.its_a_meee___MARIO()
-    if started then
-        if not stopping then
-            mario.oh_nooo()
-        end
-    else
-        mario.lets_a_gooo()
-    end
+function mario.its_a_meee()
+    ((not started or stopping) and mario.lets_a_gooo or mario.oh_nooo)()
 end
 
 return mario

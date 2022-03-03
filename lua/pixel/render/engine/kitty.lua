@@ -43,7 +43,7 @@ for _, v in pairs(kitty.constants.control_keys) do
 end
 
 local function chunks(data, size)
-    size = math.floor(math.abs(size or 512))
+    size = math.floor(math.abs(size or 4096))
     assert(size > 0, 'size cannot be negative')
     local len = data:len()
     local blocks = math.floor((len + size - 1) / size)
