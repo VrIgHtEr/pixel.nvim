@@ -1,16 +1,15 @@
-local mario = {}
-local image, terminal, chars = require 'pixel.image', require 'pixel.terminal', require 'mario.characters'
+local I, T, C = require 'pixel.image', require 'pixel.terminal', require 'mario.characters'
 
 local fps = 25
-local started, stopping, active_characters = false, false, 0
+local running, halting, active = false, false, 0
 
-local function init_characters()
-    chars.init()
-    for _, c in ipairs(chars.data) do
+local function init()
+    C.init()
+    for _, c in ipairs(C.data) do
         function c.update(state)
             c.state = type(state) == 'string' and state or c.state
             if c.state == 'idle' then
-                if stopping then
+                if halting then
                     return c.update 'halted'
                 end
                 c.state = 'waiting'
@@ -20,18 +19,18 @@ local function init_characters()
                 else
                     c.dir = not c.dir
                 end
-                c.xinc, c.xpos = c.dir and 1 or -1, c.dir and -c.anim.w or (image.win_w + c.anim.w)
+                c.xinc, c.xpos = c.dir and 1 or -1, c.dir and -c.anim.w or (I.win_w + c.anim.w)
                 local maxspeed, minspeed = c.anim.frames - 1 + c.anim.frames, 1
                 c.speed = math.max(minspeed, math.random() * (maxspeed - minspeed) + minspeed)
                 c.frame_counter = 0
             elseif c.state == 'waiting' then
-                if stopping then
+                if halting then
                     c.hide()
                     return c.update 'halted'
                 end
                 c.counter = c.counter - 1
                 if c.counter == 0 then
-                    active_characters = active_characters + 1
+                    active = active + 1
                     return c.update 'animating'
                 end
             elseif c.state == 'animating' then
@@ -42,18 +41,18 @@ local function init_characters()
                 end
                 c.frame_counter = c.frame_counter + 1
                 c.display {
-                    pos = { x = math.floor(c.xpos), y = math.floor(image.rows * image.cell_h - 1) },
+                    pos = { x = math.floor(c.xpos), y = math.floor(I.rows * I.cell_h - 1) },
                     crop = { x = c.anim.cur_frame * c.anim.w, y = c.anim.y + (c.dir and 0 or c.anim.h), w = c.anim.w, h = c.anim.h },
                     z = c.anim.z,
                     anchor = c.dir and 3 or 2,
                 }
-                if (not c.dir or c.xpos >= image.win_w) and (c.dir or c.xpos < 0) then
+                if (not c.dir or c.xpos >= I.win_w) and (c.dir or c.xpos < 0) then
                     c.hide()
-                    active_characters = active_characters - 1
+                    active = active - 1
                     return c.update 'idle'
                 end
             elseif c.state == 'halted' then
-                if not stopping then
+                if not halting then
                     return c.update 'idle'
                 end
             end
@@ -61,40 +60,40 @@ local function init_characters()
     end
 end
 
-local function draw()
-    if started then
-        terminal.begin_transaction()
-        chars.exec 'update'
-        if stopping and active_characters == 0 then
-            started, stopping = false, false
-            chars.destroy()
+local function animation_loop()
+    if running then
+        T.begin_transaction()
+        C.exec 'update'
+        if halting and active == 0 then
+            running, halting = false, false
+            C.destroy()
         else
-            vim.defer_fn(draw, 1000 / fps)
+            vim.defer_fn(animation_loop, 1000 / fps)
         end
-        terminal.end_transaction()
+        T.end_transaction()
     end
 end
 
-function mario.lets_a_gooo()
-    if stopping then
-        stopping = false
-    elseif not started then
-        started = true
-        image.discover_win_size(vim.schedule_wrap(function()
-            init_characters()
-            draw()
-        end))
-    end
-end
-
-function mario.oh_nooo()
-    if started and not stopping then
-        stopping = true
-    end
-end
-
-function mario.its_a_meee()
-    ((not started or stopping) and mario.lets_a_gooo or mario.oh_nooo)()
-end
-
-return mario
+local M
+M = {
+    lets_a_gooo = function()
+        if halting then
+            halting = false
+        elseif not running then
+            running = true
+            I.discover_win_size(vim.schedule_wrap(function()
+                init()
+                animation_loop()
+            end))
+        end
+    end,
+    oh_nooo = function()
+        if running and not halting then
+            halting = true
+        end
+    end,
+    its_a_meee = function()
+        ((not running or halting) and M.lets_a_gooo or M.oh_nooo)()
+    end,
+}
+return M

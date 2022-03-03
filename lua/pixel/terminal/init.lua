@@ -5,6 +5,7 @@ local stdout = uv.new_tty(1, false)
 terminal.stdout = stdout
 
 local queue = require('toolshed.util.generic.queue').new()
+local ansi = require 'pixel.terminal.ansi'
 local writing = false
 local faulted, fault = false, nil
 local transaction_count = 0
@@ -41,6 +42,9 @@ function terminal.last_error()
     return faulted, fault
 end
 function terminal.begin_transaction()
+    if transaction_count == 0 then
+        write(ansi.save_cursor())
+    end
     transaction_count = transaction_count + 1
 end
 
@@ -51,6 +55,7 @@ function terminal.end_transaction()
             if queue:size() > 0 then
                 commit()
             end
+            write(ansi.restore_cursor())
         end
     end
 end
@@ -78,13 +83,10 @@ function terminal.write(...)
     end
 end
 
-local ansi = require 'pixel.terminal.ansi'
 function terminal.execute_at(row, col, func, ...)
     terminal.begin_transaction()
-    write(ansi.save_cursor())
     write(ansi.cursor_position(row, col))
     local ret = { pcall(func, row, col, ...) }
-    write(ansi.restore_cursor())
     terminal.end_transaction()
     if not ret[1] then
         return nil, ret[2]
