@@ -81,12 +81,15 @@ M = {
         img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/lua/mario/sprites.png', auto_reclaim = true }
         img.size = { x = 96, y = 320 }
         img.transmit()
-        for i, character in ipairs(M.data) do
+        local shuffle = true
+        for _, character in ipairs(M.data) do
             local c = character
             c.placement = img.create_placement()
             c.state = 'halted'
             c.anim = c.anim ~= nil and c.anim or { x = 0, y = 0, w = img.size.x, h = img.size.y, frames = 1, stride_x = 0, stride_y = 0 }
-            c.anim.z = -i
+            if not c.anim.z then
+                shuffle = true
+            end
             if c.dir == nil then
                 c.dir = math.random(0, 1) == 0
             end
@@ -103,9 +106,14 @@ M = {
                 end
             end
         end
-        for i = #M.data, 2, -1 do
-            local j = math.random(1, i)
-            M.data[i].anim.z, M.data[j].anim.z = M.data[j].anim.z, M.data[i].anim.z
+        if shuffle then
+            for i, character in ipairs(M.data) do
+                character.z = -i
+            end
+            for i = #M.data, 2, -1 do
+                local j = math.random(1, i)
+                M.data[i].anim.z, M.data[j].anim.z = M.data[j].anim.z, M.data[i].anim.z
+            end
         end
     end,
 }
