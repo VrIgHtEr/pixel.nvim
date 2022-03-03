@@ -1,102 +1,13 @@
 local mario = {}
-math.randomseed(os.time())
-local image, terminal = require 'pixel.render.image', require 'pixel.render.terminal'
+local image, terminal, chars = require 'pixel.render.image', require 'pixel.render.terminal', require 'mario.characters'
 
 local fps = 25
 local started, stopping, active_characters = false, false, 0
-local img, characters
-
-local function exec_characters(key)
-    for _, c in ipairs(characters) do
-        c[key]()
-    end
-end
-
-characters = {
-    {
-        anim = {
-            x = 0,
-            y = 0,
-            w = 32,
-            h = 32,
-            frames = 3,
-            stride_x = 32,
-            stride_y = 32,
-            speed = 3,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 64,
-            w = 32,
-            h = 32,
-            frames = 3,
-            stride_x = 32,
-            stride_y = 32,
-            speed = 3,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 128,
-            w = 32,
-            h = 32,
-            frames = 2,
-            stride_x = 32,
-            stride_y = 32,
-            speed = 5,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 192,
-            w = 32,
-            h = 32,
-            frames = 2,
-            stride_x = 32,
-            stride_y = 32,
-            speed = 5,
-        },
-    },
-    {
-        anim = {
-            x = 0,
-            y = 256,
-            w = 32,
-            h = 32,
-            frames = 3,
-            stride_x = 32,
-            stride_y = 32,
-            speed = 3,
-        },
-    },
-}
+local img
 
 local function init_characters()
-    img = image.new { src = vim.fn.stdpath 'data' .. '/site/pack/vrighter/opt/pixel.nvim/data/mario.png' }
-    img.size = { x = 96, y = 320 }
-    img:transmit()
-    for i, character in ipairs(characters) do
-        local c = character
-        c.anim = c.anim ~= nil and c.anim or { x = 0, y = 0, w = img.size.x, h = img.size.y, frames = 1, stride_x = 0, stride_y = 0 }
-        c.anim.z = -i
-        c.placement = img:create_placement()
-        c.state = 'idle'
-        function c.hide()
-            c.placement.hide()
-        end
-        function c.display(opts)
-            c.placement.display(opts)
-        end
-        function c.destroy()
-            if c.placement then
-                c.placement.destroy()
-                c = nil
-            end
-        end
+    chars.init()
+    for _, c in ipairs(chars.data) do
         function c.update(state)
             c.state = type(state) == 'string' and state or c.state
             if c.state == 'idle' then
@@ -149,20 +60,15 @@ local function init_characters()
             end
         end
     end
-
-    for i = #characters, 2, -1 do
-        local j = math.random(1, i)
-        characters[i].anim.z, characters[j].anim.z = characters[j].anim.z, characters[i].anim.z
-    end
 end
 
 local function draw()
     if started then
         terminal.begin_transaction()
-        exec_characters 'update'
+        chars.exec 'update'
         if stopping and active_characters == 0 then
             started, stopping = false, false
-            exec_characters 'destroy'
+            chars.exec 'destroy'
             img:destroy()
         else
             vim.defer_fn(draw, 1000 / fps)
