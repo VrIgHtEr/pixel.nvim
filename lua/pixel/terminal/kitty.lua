@@ -87,7 +87,7 @@ end
 
 function kitty.send_cmd(cmd, data)
     cmd = build_cmd(cmd)
-    terminal.begin_transaction()
+    terminal.begin_transaction(true)
     cmd, data = cmd or '', chunks(string.base64_encode(data or ''))
     local num_chunks = #data
     if cmd == '' or num_chunks <= 1 then
