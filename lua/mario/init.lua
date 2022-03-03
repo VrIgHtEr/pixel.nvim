@@ -37,7 +37,7 @@ local function init()
                 end
                 c.frame_counter = c.frame_counter + 1
                 c.display {
-                    pos = { x = math.floor(c.xpos), y = math.floor(I.rows * I.cell_h - 1) },
+                    pos = { x = math.floor(c.xpos), y = I.win_h - 1 },
                     crop = { x = c.anim.x + c.anim.cur_frame * c.anim.stride_x, y = c.anim.y + (c.dir and 0 or c.anim.stride_y), w = c.anim.w, h = c.anim.h },
                     z = c.anim.z,
                     anchor = c.dir and 3 or 2,
