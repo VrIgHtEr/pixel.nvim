@@ -22,6 +22,7 @@ characters = {
             frames = 3,
             stride_x = 32,
             stride_y = 32,
+            speed = 3,
         },
     },
     {
@@ -33,6 +34,7 @@ characters = {
             frames = 3,
             stride_x = 32,
             stride_y = 32,
+            speed = 3,
         },
     },
     {
@@ -44,6 +46,7 @@ characters = {
             frames = 2,
             stride_x = 32,
             stride_y = 32,
+            speed = 5,
         },
     },
     {
@@ -55,6 +58,7 @@ characters = {
             frames = 2,
             stride_x = 32,
             stride_y = 32,
+            speed = 5,
         },
     },
     {
@@ -66,6 +70,7 @@ characters = {
             frames = 3,
             stride_x = 32,
             stride_y = 32,
+            speed = 3,
         },
     },
 }
@@ -81,7 +86,6 @@ local function init_characters()
         c.p = i
         c.placement = img:create_placement()
         c.state = 'idle'
-        c.anim_divisor = 3 + ((i == 3 or i == 4) and 2 or 0)
         function c.hide()
             c.placement.hide()
         end
@@ -123,7 +127,7 @@ local function init_characters()
                 end
             elseif c.state == 'animating' then
                 c.xpos = c.xpos + c.xinc * c.speed
-                c.anim.cur_frame = math.floor((c.frame_counter / c.anim_divisor * c.speed) % (c.anim.frames > 1 and c.anim.frames - 2 + c.anim.frames or 1))
+                c.anim.cur_frame = math.floor((c.frame_counter / c.anim.speed * c.speed) % (c.anim.frames > 1 and c.anim.frames - 2 + c.anim.frames or 1))
                 if c.anim.cur_frame >= c.anim.frames then
                     c.anim.cur_frame = c.anim.frames - 1 + c.anim.frames - c.anim.cur_frame
                 end
