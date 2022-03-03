@@ -188,7 +188,7 @@ function mario.oh_nooo()
     end
 end
 
-function mario.its_a_meee()
+function mario.its_a_meee___MARIO()
     if started then
         if not stopping then
             mario.oh_nooo()
